@@ -1,6 +1,6 @@
 -- =====================================================================
 -- AUTO-TRACKER LUA : FRAGS PAR DRESSEUR & GESTION DES RELANCES
--- (Conçu pour être lu par un script Python - V4 avec Export Box)
+-- (Conçu pour être lu par un script Python - V6 Reset au lancement)
 -- =====================================================================
 
 local gPlayerPartyCount = 0x0200536D
@@ -27,7 +27,7 @@ local fragStats = {}
 local trackerBuffer = nil
 local logLines = {}
 
--- 1. Affichage UNIQUEMENT dans le buffer (plus de console:log)
+-- 1. Affichage UNIQUEMENT dans le buffer
 local function logToTracker(msg)
     if not trackerBuffer then return end
     
@@ -73,33 +73,7 @@ local function saveJSON()
     file:close()
 end
 
--- 3. Chargement du JSON (Pour survivre au redémarrage de mGBA)
-local function loadJSON()
-    local file = io.open("frags_by_trainer.json", "r")
-    if not file then return end
-    
-    trainerHistory = {}
-    fragStats = {}
-    
-    for line in file:lines() do
-        local tId = string.match(line, '"trainerId":%s*(%d+)')
-        if tId then
-            tId = tonumber(tId)
-            table.insert(trainerHistory, tId)
-            fragStats[tId] = {}
-            
-            local fragsStr = string.match(line, '"frags":%s*{(.-)}')
-            if fragsStr then
-                for pkm, kills in string.gmatch(fragsStr, '"([^"]+)":%s*(%d+)') do
-                    fragStats[tId][pkm] = tonumber(kills)
-                end
-            end
-        end
-    end
-    file:close()
-end
-
--- 4. Ajouter un frag au dresseur en cours
+-- 3. Ajouter un frag au dresseur en cours
 local function addFrag(pokemonName)
     if not fragStats[currentTrainerId] then
         fragStats[currentTrainerId] = {}
@@ -108,7 +82,7 @@ local function addFrag(pokemonName)
     fragStats[currentTrainerId][pokemonName] = currentKills + 1
 end
 
--- 5. Déterminer qui porte le coup fatal
+-- 4. Déterminer qui porte le coup fatal
 local function getKillerName()
     local attackerId = emu:read8(gBattlerAttacker)
     if attackerId == 0 or attackerId == 2 then
@@ -121,14 +95,14 @@ local function getKillerName()
     return "Non attribué"
 end
 
--- 6. Exporter l'équipe et le PC dans un fichier TXT pour le Python
+-- 5. Exporter l'équipe et le PC dans un fichier TXT pour le Python
 local function exportBoxToTXT()
     local file = io.open("box_data.txt", "w")
     if not file then return end
     
     local out = ""
     
-    -- 6a. Export de l'équipe actuelle
+    -- 5a. Export de l'équipe actuelle
     if getParty then
         for _, mon in ipairs(getParty()) do
             if mon.species ~= 0 and mons[mon.species] ~= nil then
@@ -146,7 +120,7 @@ local function exportBoxToTXT()
         end
     end
     
-    -- 6b. Export du PC complet (14 boîtes * 30 slots = 420 slots)
+    -- 5b. Export du PC complet (14 boîtes * 30 slots = 420 slots)
     if storageLoc and readBoxMon then
         local boxBaseAddress = storageLoc + 4
         local totalBoxMons = 420 
@@ -176,7 +150,7 @@ local function exportBoxToTXT()
     file:close()
 end
 
--- 7. Suivi des combats (exécuté à chaque frame)
+-- 6. Suivi des combats (exécuté à chaque frame)
 local function trackCombatDirect()
     local outcome = emu:read8(gBattleOutcome)
     local inBattle = (emu:read8(gBattlersCount) > 0 and outcome == 0)
@@ -188,7 +162,7 @@ local function trackCombatDirect()
         
         -- Création instantanée du dump de la box
         exportBoxToTXT()
-        logToTracker("📦 Box exportée avec succès ! (box_data.txt)")
+        logToTracker("Box exportée avec succès ! (box_data.txt)")
         
         -- GESTION DU ROLLBACK (Oubli des frags si on relance)
         local foundIdx = nil
@@ -200,19 +174,19 @@ local function trackCombatDirect()
         end
         
         if foundIdx then
-            -- Suppression du dresseur actuel et de TOUS les suivants
-            for i = #trainerHistory, foundIdx, -1 do
-                fragStats[trainerHistory[i]] = nil
-                table.remove(trainerHistory, i)
+            -- On vide les frags de l'équipe pour le dresseur actuel 
+            -- et TOUS ceux rencontrés chronologiquement après lui
+            for i = foundIdx, #trainerHistory do
+                fragStats[trainerHistory[i]] = {}
             end
-            logToTracker("⚠️ Relance détectée ! Historique réinitialisé à partir d'ici.")
+            logToTracker("Relance détectée ! Frags réinitialisés à partir d'ici.")
+        else
+            -- C'est un nouveau dresseur, on l'ajoute à l'historique
+            table.insert(trainerHistory, currentTrainerId)
+            fragStats[currentTrainerId] = {}
         end
         
-        -- Nouvelle entrée fraîche
-        table.insert(trainerHistory, currentTrainerId)
-        fragStats[currentTrainerId] = {}
-        
-        -- INIT: Ajout de toute l'équipe du joueur à 0 frag
+        -- INIT: Ajout de toute l'équipe du joueur à 0 frag pour le dresseur ACTUEL
         local pCount = emu:read8(gPlayerPartyCount)
         for i = 1, pCount do
             local pMon = readPartyMon(gPlayerParty + (i - 1) * partyMonSize)
@@ -225,7 +199,7 @@ local function trackCombatDirect()
         end
         
         saveJSON()
-        logToTracker("⚔️ Combat démarré ! (Dresseur " .. currentTrainerId .. ")")
+        logToTracker("Combat démarré ! (Dresseur " .. currentTrainerId .. ")")
         
         -- Mémoriser les HP initiaux de l'adversaire
         for i = 1, 6 do
@@ -236,7 +210,7 @@ local function trackCombatDirect()
     -- FIN DU COMBAT
     elseif not inBattle and wasInBattle then
         wasInBattle = false
-        logToTracker("🏁 Fin du combat.")
+        logToTracker("Fin du combat.")
         saveJSON()
     end
     
@@ -251,7 +225,7 @@ local function trackCombatDirect()
                     local killerName = getKillerName()
                     
                     addFrag(killerName)
-                    logToTracker("💀 " .. enemyName .. " tué par " .. killerName)
+                    logToTracker("" .. enemyName .. " tué par " .. killerName)
                     saveJSON()
                 end
                 lastEnemyHP[i] = eMon.hp
@@ -260,14 +234,19 @@ local function trackCombatDirect()
     end
 end
 
--- 8. Initialisation
+-- 7. Initialisation
 local function initDirectTracker()
-    loadJSON()
+    -- On écrase volontairement les données à chaque lancement
+    trainerHistory = {}
+    fragStats = {}
+    saveJSON() -- Cela va créer un fichier frags_by_trainer.json vide: {"encounters": []}
+
     if not trackerBuffer then
         trackerBuffer = console:createBuffer("Frags & Live Tracker")
         trackerBuffer:setSize(350, 300)
-        logToTracker("Tracker configuré pour Google Sheets !")
     end
+    
+    logToTracker("Tracker réinitialisé ! Prêt pour une nouvelle session.")
 end
 
 callbacks:add("start", initDirectTracker)
