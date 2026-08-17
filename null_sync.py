@@ -12,7 +12,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # ==========================================
 # CONFIGURATION
 # ==========================================
-SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/17SsoACBANl5g-iQghpHbQPkRDyR59ujOs0aZHsIaIAU/edit?gid=866011110#gid=866011110"
+SPREADSHEET_URL = "INSERT YOUR GOOGLE SHEET LINK"
 CREDENTIALS_FILE = "credentials.json"
 TRAINERS_FILE = "trainers.json"
 FRAGS_FILE = "frags_by_trainer.json"
