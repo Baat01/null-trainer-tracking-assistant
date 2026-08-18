@@ -1,3 +1,8 @@
+# Video explication de l'installation : 
+
+https://youtu.be/db_Oq92xHoo
+
+
 # Pokémon Null - Nuzlocke Auto-Tracker & Google Sheets Sync
 
 Ce dépôt contient un ensemble d'outils (Lua et Python) permettant d'automatiser entièrement le suivi de vos runs (Nuzlocke, etc.) sur **Pokémon Null** (ou d'autres hacks basés sur la décompilation *pokeemerald-expansion*). 
