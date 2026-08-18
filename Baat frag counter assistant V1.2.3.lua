@@ -1,6 +1,6 @@
 -- =====================================================================
 -- AUTO-TRACKER LUA : FRAGS PAR DRESSEUR & GESTION DES RELANCES
--- (Conçu pour être lu par un script Python - V8 Fige l'ordre d'équipe)
+-- (Conçu pour être lu par un script Python - V9 Sécurité getParty)
 -- =====================================================================
 
 local gPlayerPartyCount = 0x0200536D
@@ -22,7 +22,7 @@ local lastEnemyHP = {0, 0, 0, 0, 0, 0}
 -- Historique et Stats
 local trainerHistory = {} 
 local fragStats = {}      
-local partyOrders = {} -- NOUVEAU : Fige l'ordre initial de l'équipe
+local partyOrders = {} -- Fige l'ordre initial de l'équipe
 
 -- Fenêtre et Logs
 local trackerBuffer = nil
@@ -91,38 +91,50 @@ local function addFrag(pokemonName)
     fragStats[currentTrainerId][pokemonName] = currentKills + 1
 end
 
--- 4. Déterminer qui porte le coup fatal (AVEC FALLBACK)
+-- 4. Déterminer qui porte le coup fatal (VIA GETPARTY)
 local function getKillerName()
     local attackerId = emu:read8(gBattlerAttacker)
+    local party = getParty and getParty()
     
+    -- Si getParty n'est pas dispo, on renvoie Non attribué
+    if not party then return "Non attribué" end
+    
+    -- Fonction interne pour récupérer le nom de façon sécurisée
+    local function getPkmName(partyIdx)
+        if partyIdx and partyIdx >= 0 and partyIdx < 6 then
+            local pMon = party[partyIdx + 1] -- Lua est indexé à partir de 1
+            if pMon and pMon.species ~= 0 then
+                return mons[pMon.species] or "Inconnu"
+            end
+        end
+        return nil
+    end
+
+    -- CAS A : Attaque directe du joueur
     if attackerId == 0 or attackerId == 2 then
         local partyIndex = emu:read8(gBattlerPartyIndexes + attackerId)
-        local pMon = readPartyMon(gPlayerParty + partyIndex * partyMonSize)
-        if pMon and pMon.species ~= 0 then
-            return mons[pMon.species] or "Inconnu"
-        end
+        local name = getPkmName(partyIndex)
+        if name then return name end
     end
     
+    -- CAS B : FALLBACK (Poison, Brûlure, Recul, Memento...)
     local partyIdx0 = emu:read8(gBattlerPartyIndexes + 0)
-    local pMon0 = readPartyMon(gPlayerParty + partyIdx0 * partyMonSize)
+    local name0 = getPkmName(partyIdx0)
     
     local battlersCount = emu:read8(gBattlersCount)
     
     if battlersCount <= 2 then
-        if pMon0 and pMon0.species ~= 0 then
-            return mons[pMon0.species] or "Inconnu"
-        end
+        if name0 then return name0 end
     else
         local partyIdx2 = emu:read8(gBattlerPartyIndexes + 2)
-        local pMon2 = readPartyMon(gPlayerParty + partyIdx2 * partyMonSize)
+        local name2 = getPkmName(partyIdx2)
         
-        if pMon0 and pMon0.species ~= 0 and pMon0.hp > 0 then
-            return mons[pMon0.species] or "Inconnu"
-        elseif pMon2 and pMon2.species ~= 0 and pMon2.hp > 0 then
-            return mons[pMon2.species] or "Inconnu"
-        elseif pMon0 and pMon0.species ~= 0 then
-            return mons[pMon0.species] or "Inconnu"
-        end
+        local pMon0 = party[partyIdx0 + 1]
+        local pMon2 = party[partyIdx2 + 1]
+        
+        if pMon0 and pMon0.hp > 0 and name0 then return name0 end
+        if pMon2 and pMon2.hp > 0 and name2 then return name2 end
+        if name0 then return name0 end
     end
 
     return "Non attribué"
@@ -207,7 +219,7 @@ local function trackCombatDirect()
                 fragStats[rId] = {}
                 partyOrders[rId] = {}
             end
-            logToTracker("Reset détectée ! Frags réinitialisés à partir d'ici.")
+            logToTracker("Relance détectée ! Frags réinitialisés à partir d'ici.")
         else
             table.insert(trainerHistory, currentTrainerId)
             fragStats[currentTrainerId] = {}
@@ -218,15 +230,16 @@ local function trackCombatDirect()
             partyOrders[currentTrainerId] = {}
         end
         
-        -- INIT: Capture de l'ordre exact de l'équipe (Frame 1)
-        local pCount = emu:read8(gPlayerPartyCount)
-        for i = 1, pCount do
-            local pMon = readPartyMon(gPlayerParty + (i - 1) * partyMonSize)
-            if pMon and pMon.species ~= 0 then
-                local pkmName = mons[pMon.species] or "Inconnu"
-                if not fragStats[currentTrainerId][pkmName] then
-                    fragStats[currentTrainerId][pkmName] = 0
-                    table.insert(partyOrders[currentTrainerId], pkmName) -- On fige l'ordre
+        -- INIT: Capture de l'ordre exact de l'équipe (VIA GETPARTY)
+        local party = getParty and getParty()
+        if party then
+            for _, pMon in ipairs(party) do
+                if pMon and pMon.species ~= 0 then
+                    local pkmName = mons[pMon.species] or "Inconnu"
+                    if not fragStats[currentTrainerId][pkmName] then
+                        fragStats[currentTrainerId][pkmName] = 0
+                        table.insert(partyOrders[currentTrainerId], pkmName) -- On fige l'ordre
+                    end
                 end
             end
         end
@@ -241,7 +254,7 @@ local function trackCombatDirect()
         
     elseif not inBattle and wasInBattle then
         wasInBattle = false
-        logToTracker("🏁 Fin du combat.")
+        logToTracker("Fin du combat.")
         saveJSON()
     end
     
