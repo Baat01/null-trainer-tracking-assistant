@@ -1,6 +1,6 @@
 -- =====================================================================
 -- AUTO-TRACKER LUA : FRAGS PAR DRESSEUR & GESTION DES RELANCES
--- (Conçu pour être lu par un script Python - V7 Fallback Status/Suicide)
+-- (Conçu pour être lu par un script Python - V8 Fige l'ordre d'équipe)
 -- =====================================================================
 
 local gPlayerPartyCount = 0x0200536D
@@ -22,6 +22,7 @@ local lastEnemyHP = {0, 0, 0, 0, 0, 0}
 -- Historique et Stats
 local trainerHistory = {} 
 local fragStats = {}      
+local partyOrders = {} -- NOUVEAU : Fige l'ordre initial de l'équipe
 
 -- Fenêtre et Logs
 local trackerBuffer = nil
@@ -37,8 +38,10 @@ local function logToTracker(msg)
     trackerBuffer:clear()
     trackerBuffer:print("=== FRAGS DU DRESSEUR ACTUEL (ID: " .. currentTrainerId .. ") ===\n\n")
     
-    if fragStats[currentTrainerId] then
-        for pkm, kills in pairs(fragStats[currentTrainerId]) do
+    -- Affiche les frags en respectant strictement l'ordre initial de l'équipe
+    if fragStats[currentTrainerId] and partyOrders[currentTrainerId] then
+        for _, pkm in ipairs(partyOrders[currentTrainerId]) do
+            local kills = fragStats[currentTrainerId][pkm] or 0
             trackerBuffer:print("- " .. pkm .. " : " .. kills .. " frag(s)\n")
         end
         trackerBuffer:print("--------------------------------\n")
@@ -49,7 +52,7 @@ local function logToTracker(msg)
     end
 end
 
--- 2. Sauvegarde en JSON
+-- 2. Sauvegarde en JSON (Respecte l'ordre initial)
 local function saveJSON()
     local file = io.open("frags_by_trainer.json", "w")
     if not file then return end
@@ -59,8 +62,15 @@ local function saveJSON()
         out = out .. string.format('    {"trainerId": %d, "frags": {', tId)
         
         local fragParts = {}
-        for pkm, kills in pairs(fragStats[tId]) do
-            table.insert(fragParts, string.format('"%s": %d', pkm, kills))
+        if partyOrders[tId] then
+            for _, pkm in ipairs(partyOrders[tId]) do
+                local kills = fragStats[tId][pkm] or 0
+                table.insert(fragParts, string.format('"%s": %d', pkm, kills))
+            end
+        else
+            for pkm, kills in pairs(fragStats[tId]) do
+                table.insert(fragParts, string.format('"%s": %d', pkm, kills))
+            end
         end
         out = out .. table.concat(fragParts, ", ") .. "}}"
         
@@ -81,11 +91,10 @@ local function addFrag(pokemonName)
     fragStats[currentTrainerId][pokemonName] = currentKills + 1
 end
 
--- 4. Déterminer qui porte le coup fatal (AVEC FALLBACK AMÉLIORÉ)
+-- 4. Déterminer qui porte le coup fatal (AVEC FALLBACK)
 local function getKillerName()
     local attackerId = emu:read8(gBattlerAttacker)
     
-    -- CAS A : Attaque directe du joueur (Le jeu désigne le Slot 0 ou 2)
     if attackerId == 0 or attackerId == 2 then
         local partyIndex = emu:read8(gBattlerPartyIndexes + attackerId)
         local pMon = readPartyMon(gPlayerParty + partyIndex * partyMonSize)
@@ -94,30 +103,23 @@ local function getKillerName()
         end
     end
     
-    -- CAS B : FALLBACK (Poison, Brûlure, Recul, Memento, Mort simultanée...)
-    -- L'adresse gBattlerPartyIndexes garde le Pokémon en mémoire tant qu'il n'a pas été remplacé, MÊME À 0 PV !
     local partyIdx0 = emu:read8(gBattlerPartyIndexes + 0)
     local pMon0 = readPartyMon(gPlayerParty + partyIdx0 * partyMonSize)
     
     local battlersCount = emu:read8(gBattlersCount)
     
-    -- S'il s'agit d'un combat simple (2 combattants max sur le terrain)
     if battlersCount <= 2 then
-        -- On donne toujours le frag au Pokémon actif (Slot 1), qu'il soit vivant ou mort ce tour-ci
         if pMon0 and pMon0.species ~= 0 then
             return mons[pMon0.species] or "Inconnu"
         end
     else
-        -- Combat Double (4 combattants sur le terrain)
         local partyIdx2 = emu:read8(gBattlerPartyIndexes + 2)
         local pMon2 = readPartyMon(gPlayerParty + partyIdx2 * partyMonSize)
         
-        -- En combat double, on essaie de donner le frag au Pokémon survivant
         if pMon0 and pMon0.species ~= 0 and pMon0.hp > 0 then
             return mons[pMon0.species] or "Inconnu"
         elseif pMon2 and pMon2.species ~= 0 and pMon2.hp > 0 then
             return mons[pMon2.species] or "Inconnu"
-        -- Si les DEUX sont morts (ex: grosse Explosion), on attribue par défaut au Slot 1
         elseif pMon0 and pMon0.species ~= 0 then
             return mons[pMon0.species] or "Inconnu"
         end
@@ -201,14 +203,22 @@ local function trackCombatDirect()
         
         if foundIdx then
             for i = foundIdx, #trainerHistory do
-                fragStats[trainerHistory[i]] = {}
+                local rId = trainerHistory[i]
+                fragStats[rId] = {}
+                partyOrders[rId] = {}
             end
             logToTracker("Reset détectée ! Frags réinitialisés à partir d'ici.")
         else
             table.insert(trainerHistory, currentTrainerId)
             fragStats[currentTrainerId] = {}
+            partyOrders[currentTrainerId] = {}
         end
         
+        if not partyOrders[currentTrainerId] then
+            partyOrders[currentTrainerId] = {}
+        end
+        
+        -- INIT: Capture de l'ordre exact de l'équipe (Frame 1)
         local pCount = emu:read8(gPlayerPartyCount)
         for i = 1, pCount do
             local pMon = readPartyMon(gPlayerParty + (i - 1) * partyMonSize)
@@ -216,6 +226,7 @@ local function trackCombatDirect()
                 local pkmName = mons[pMon.species] or "Inconnu"
                 if not fragStats[currentTrainerId][pkmName] then
                     fragStats[currentTrainerId][pkmName] = 0
+                    table.insert(partyOrders[currentTrainerId], pkmName) -- On fige l'ordre
                 end
             end
         end
@@ -230,7 +241,7 @@ local function trackCombatDirect()
         
     elseif not inBattle and wasInBattle then
         wasInBattle = false
-        logToTracker("Fin du combat.")
+        logToTracker("🏁 Fin du combat.")
         saveJSON()
     end
     
@@ -257,6 +268,7 @@ end
 local function initDirectTracker()
     trainerHistory = {}
     fragStats = {}
+    partyOrders = {}
     saveJSON() 
 
     if not trackerBuffer then
