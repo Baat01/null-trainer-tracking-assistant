@@ -5,6 +5,7 @@ import sys
 import threading
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
+from datetime import datetime
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -119,8 +120,18 @@ def import_box(sheet):
     else:
         print("  Aucun nouveau Pokémon à importer.")
 
+def log_traceback(message):
+    """Affiche une erreur et l'écrit dans un fichier de log horodaté."""
+    print(message)
+    try:
+        with open("sync_traceback.txt", "a", encoding="utf-8") as f:
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"[{now}] {message}\n")
+    except Exception as e:
+        print(f"Impossible d'écrire dans le fichier de traceback : {e}")
+
 # ==========================================
-# FONCTION 2 : UPDATE DES FRAGS (AVEC REGROUPEMENT)
+# FONCTION 2 : UPDATE DES FRAGS (AVEC TRACEBACK)
 # ==========================================
 def update_frags(sheet):
     print("▶ Mise à jour des Frags en cours...")
@@ -142,36 +153,39 @@ def update_frags(sheet):
         trainer_name = trainers_map.get(t_id)
 
         if not trainer_name:
-            print(f"  [Avertissement] Dresseur ID {t_id} inconnu.")
+            log_traceback(f"❌ [Avertissement] Le dresseur ID {t_id} n'a pas de nom défini dans trainers.json.")
             continue
 
-        # Si c'est la première fois qu'on croise ce nom de dresseur, on l'initialise
+        # Initialisation si c'est la première fois qu'on croise ce nom
         if trainer_name not in aggregated_frags:
-            aggregated_frags[trainer_name] = {}
+            aggregated_frags[trainer_name] = {"ids": [], "frags": {}}
+            
+        # On mémorise l'ID pour le log en cas d'erreur
+        if t_id not in aggregated_frags[trainer_name]["ids"]:
+            aggregated_frags[trainer_name]["ids"].append(t_id)
             
         # On additionne les frags pour chaque Pokémon
         for pkm, kills in encounter["frags"].items():
-            if pkm not in aggregated_frags[trainer_name]:
-                aggregated_frags[trainer_name][pkm] = 0
-            aggregated_frags[trainer_name][pkm] += kills
+            if pkm not in aggregated_frags[trainer_name]["frags"]:
+                aggregated_frags[trainer_name]["frags"][pkm] = 0
+            aggregated_frags[trainer_name]["frags"][pkm] += kills
 
     # 2. Préparation des envois vers Google Sheets
     updates = []
     
-    for trainer_name, frags in aggregated_frags.items():
+    for trainer_name, data in aggregated_frags.items():
         row_index = find_best_trainer_row(trainer_name, col_a)
 
         if not row_index:
-            print(f"  [Avertissement] Dresseur '{trainer_name}' introuvable dans la Sheet.")
+            # Création du message d'erreur avec tous les IDs concernés
+            ids_str = ", ".join(data["ids"])
+            log_traceback(f"❌ [Erreur Sheet] Dresseur ID {ids_str} ('{trainer_name}') est introuvable dans la Google Sheet.")
             continue
 
         row_data = []
         
-        # Tri des Pokémon du plus grand nombre de kills au plus petit
-        sorted_frags = sorted(frags.items(), key=lambda x: x[1], reverse=True)
-        
-        # On extrait jusqu'à 6 pokémons max
-        for pkm, kills in sorted_frags[:6]:
+        # On garde l'ordre initial (PAS DE TRI)
+        for pkm, kills in list(data["frags"].items())[:6]:
             row_data.append(pkm)
             row_data.append(kills)
             
