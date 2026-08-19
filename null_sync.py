@@ -1,3 +1,4 @@
+import os
 import json
 import re
 import difflib
@@ -13,14 +14,16 @@ from oauth2client.service_account import ServiceAccountCredentials
 # ==========================================
 # CONFIGURATION
 # ==========================================
-SPREADSHEET_URL = "INSERT YOUR GOOGLE SHEET LINK"
+# L'URL sera chargée dynamiquement au lancement
+SPREADSHEET_URL = "" 
+SHEET_URL_FILE = "sheet_url.txt"
 CREDENTIALS_FILE = "credentials.json"
 TRAINERS_FILE = "trainers.json"
 FRAGS_FILE = "frags_by_trainer.json"
 BOX_FILE = "box_data.txt"
 
 # ==========================================
-# LOGIQUE MÉTIER (Identique à avant)
+# LOGIQUE MÉTIER
 # ==========================================
 def load_json(filepath):
     try:
@@ -131,7 +134,7 @@ def log_traceback(message):
         print(f"Impossible d'écrire dans le fichier de traceback : {e}")
 
 # ==========================================
-# FONCTION 2 : UPDATE DES FRAGS (AVEC TRACEBACK)
+# FONCTION 2 : UPDATE DES FRAGS
 # ==========================================
 def update_frags(sheet):
     print("▶ Mise à jour des Frags en cours...")
@@ -145,7 +148,6 @@ def update_frags(sheet):
     tracker_sheet = sheet.worksheet("Trainer Tracking")
     col_a = tracker_sheet.col_values(1)
     
-    # 1. Étape de Regroupement (Agrégation)
     aggregated_frags = {}
     
     for encounter in frags_data["encounters"]:
@@ -156,40 +158,33 @@ def update_frags(sheet):
             log_traceback(f"❌ [Avertissement] Le dresseur ID {t_id} n'a pas de nom défini dans trainers.json.")
             continue
 
-        # Initialisation si c'est la première fois qu'on croise ce nom
         if trainer_name not in aggregated_frags:
             aggregated_frags[trainer_name] = {"ids": [], "frags": {}}
             
-        # On mémorise l'ID pour le log en cas d'erreur
         if t_id not in aggregated_frags[trainer_name]["ids"]:
             aggregated_frags[trainer_name]["ids"].append(t_id)
             
-        # On additionne les frags pour chaque Pokémon
         for pkm, kills in encounter["frags"].items():
             if pkm not in aggregated_frags[trainer_name]["frags"]:
                 aggregated_frags[trainer_name]["frags"][pkm] = 0
             aggregated_frags[trainer_name]["frags"][pkm] += kills
 
-    # 2. Préparation des envois vers Google Sheets
     updates = []
     
     for trainer_name, data in aggregated_frags.items():
         row_index = find_best_trainer_row(trainer_name, col_a)
 
         if not row_index:
-            # Création du message d'erreur avec tous les IDs concernés
             ids_str = ", ".join(data["ids"])
             log_traceback(f"❌ [Erreur Sheet] Dresseur ID {ids_str} ('{trainer_name}') est introuvable dans la Google Sheet.")
             continue
 
         row_data = []
         
-        # On garde l'ordre initial (PAS DE TRI)
         for pkm, kills in list(data["frags"].items())[:6]:
             row_data.append(pkm)
             row_data.append(kills)
             
-        # On complète avec du vide pour écraser les anciennes données
         while len(row_data) < 12:
             row_data.append("")
 
@@ -198,7 +193,6 @@ def update_frags(sheet):
             "values": [row_data]
         })
 
-    # 3. Envoi groupé
     if updates:
         tracker_sheet.batch_update(updates)
         print(f"  ✔ Frags mis à jour pour {len(updates)} dresseur(s) regroupé(s) !")
@@ -238,24 +232,20 @@ class TrackerApp:
         
         self.setup_ui()
 
-        # Redirige les `print()` classiques vers la zone de texte de l'interface
         sys.stdout = PrintLogger(self.log_area, self.root)
 
         print("Bienvenue dans le Null Tracker Sync !")
-        print("L'outil est prêt à envoyer tes données vers Google Sheets.\n")
+        print("L'outil est connecté à ta Google Sheet et prêt.\n")
 
     def setup_ui(self):
-        # Titre
         title_label = tk.Label(self.root, text="Google Sheets Auto-Sync", font=("Helvetica", 16, "bold"))
         title_label.pack(pady=(0, 15))
 
-        # --- Bouton Manuel ---
         self.btn_manual = tk.Button(self.root, text="🔄 Synchroniser Maintenant", font=("Helvetica", 12), 
                                     bg="#4CAF50", fg="white", activebackground="#45a049", 
                                     command=self.run_sync_thread)
         self.btn_manual.pack(fill=tk.X, pady=5)
 
-        # --- Frame Auto-Sync ---
         frame_auto = tk.LabelFrame(self.root, text="Synchronisation Automatique", font=("Helvetica", 10), padx=10, pady=10)
         frame_auto.pack(fill=tk.X, pady=15)
 
@@ -272,13 +262,11 @@ class TrackerApp:
         self.lbl_status = tk.Label(self.root, text="Statut : En attente", fg="gray", font=("Helvetica", 10, "italic"))
         self.lbl_status.pack(pady=5)
 
-        # --- Zone de Logs ---
         self.log_area = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, height=12, font=("Consolas", 9), state=tk.DISABLED)
         self.log_area.pack(fill=tk.BOTH, expand=True)
 
     def toggle_auto_sync(self):
         if self.is_auto_sync_running:
-            # Désactiver
             self.is_auto_sync_running = False
             if self.auto_sync_job:
                 self.root.after_cancel(self.auto_sync_job)
@@ -287,7 +275,6 @@ class TrackerApp:
             print("\n⏹️ Mode Automatique arrêté.")
             self.entry_minutes.config(state=tk.NORMAL)
         else:
-            # Activer
             try:
                 self.minutes = int(self.entry_minutes.get())
                 if self.minutes <= 0: raise ValueError
@@ -301,14 +288,11 @@ class TrackerApp:
             self.lbl_status.config(text=f"Statut : Auto-Sync Actif (toutes les {self.minutes} min)", fg="#2196F3")
             print(f"\n▶️ Mode Automatique activé. Prochaine synchro dans {self.minutes} minute(s).")
             
-            # On lance une première synchro tout de suite
             self.run_sync_thread()
-            # On programme la boucle
             self.schedule_next_sync()
 
     def schedule_next_sync(self):
         if self.is_auto_sync_running:
-            # 60000 millisecondes = 1 minute
             self.auto_sync_job = self.root.after(self.minutes * 60000, self._auto_sync_tick)
 
     def _auto_sync_tick(self):
@@ -316,33 +300,72 @@ class TrackerApp:
         self.schedule_next_sync()
 
     def run_sync_thread(self):
-        # On empêche de cliquer plusieurs fois de suite
         self.btn_manual.config(state=tk.DISABLED)
-        # On lance le travail dans un thread pour ne pas geler la fenêtre
         threading.Thread(target=self.perform_sync, daemon=True).start()
 
     def perform_sync(self):
         print("\n--- DÉBUT DE LA SYNCHRONISATION ---")
         try:
-            # Authentification Google Sheets
             scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
             creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
             client = gspread.authorize(creds)
             sheet = client.open_by_url(SPREADSHEET_URL)
 
-            # Lancement des opérations
             import_box(sheet)
             update_frags(sheet)
             
         except Exception as e:
             print(f"❌ Erreur lors de la synchronisation : {e}")
+            log_traceback(f"❌ Erreur critique de synchronisation : {e}")
             
         print("--- FIN DE LA SYNCHRONISATION ---")
-        
-        # On réactive le bouton une fois fini
         self.root.after(0, lambda: self.btn_manual.config(state=tk.NORMAL))
 
+# ==========================================
+# POINT D'ENTRÉE ET VÉRIFICATIONS
+# ==========================================
 if __name__ == "__main__":
     root = tk.Tk()
+    root.withdraw() # Cache la fenêtre pendant les vérifications
+
+    missing_files = []
+
+    # Vérification 1 : Les identifiants Google
+    if not os.path.exists(CREDENTIALS_FILE):
+        missing_files.append(CREDENTIALS_FILE)
+
+    # Vérification 2 : Le dictionnaire des dresseurs
+    if not os.path.exists(TRAINERS_FILE):
+        missing_files.append(TRAINERS_FILE)
+
+    # Vérification 3 : Le fichier contenant le lien (on le crée s'il manque)
+    if not os.path.exists(SHEET_URL_FILE):
+        with open(SHEET_URL_FILE, "w", encoding="utf-8") as f:
+            f.write("COLLE_LE_LIEN_DE_TA_SHEET_ICI")
+        missing_files.append(SHEET_URL_FILE)
+
+    if missing_files:
+        msg = "Le programme ne peut pas démarrer car certains fichiers obligatoires sont introuvables :\n\n"
+        for f in missing_files:
+            msg += f"- {f}\n"
+        msg += "\nComment les récupérer/configurer :\n"
+        msg += "1. credentials.json : Crée une clé via Google Cloud (voir tutoriel GitHub).\n"
+        msg += "2. sheet_url.txt : Ce fichier vient d'être créé ! Ouvre-le avec le Bloc-notes et colle le lien de ta Google Sheet dedans.\n"
+        msg += "3. trainers.json : Utilise le script fourni pour le générer ou télécharge-le.\n\n"
+        msg += "Place tous ces fichiers dans le même dossier que cet exécutable (.exe) et relance l'application."
+        
+        messagebox.showerror("Fichiers manquants", msg)
+        sys.exit()
+
+    # Si tous les fichiers sont là, on lit l'URL
+    with open(SHEET_URL_FILE, "r", encoding="utf-8") as f:
+        url = f.read().strip()
+        if not url.startswith("http"):
+            messagebox.showerror("Lien invalide", f"Le fichier '{SHEET_URL_FILE}' ne contient pas un lien valide.\n\nOuvre ce fichier avec le Bloc-notes, supprime tout, et colle le lien direct vers ta Google Sheet (qui commence par https://...).")
+            sys.exit()
+        SPREADSHEET_URL = url
+
+    # Affichage de l'interface graphique
+    root.deiconify() 
     app = TrackerApp(root)
     root.mainloop()
