@@ -1,5 +1,5 @@
 -- =====================================================================
--- AUTO-TRACKER LUA : ANTI-SAUVAGES & OPTI SAUVEGARDE
+-- AUTO-TRACKER LUA : GESTION DES MÉGA-ÉVOLUTIONS & 0 LAG (V23)
 -- =====================================================================
 
 local gPlayerPartyCount = 0x0200536D
@@ -16,6 +16,7 @@ local partyMonSize = 104
 
 local wasInBattle = false
 local currentTrainerId = 0
+local lastTrainerDisplayId = 0
 local lastEnemyHP = {0, 0, 0, 0, 0, 0}
 
 local trainerHistory = {} 
@@ -24,14 +25,24 @@ local partyOrders = {}
 
 local trackerBuffer = nil
 local logLines = {}
+local forceRender = false
 
--- 1. Fonction pour conserver un historique de logs (max 5 lignes)
+-- 1. Nettoyage des noms (regroupe les Méga et Primo avec la forme de base)
+local function cleanPokemonName(name)
+    if not name then return "Inconnu" end
+    -- Retire les suffixes -Mega, -Mega-X, -Mega-Y, -Primal, etc.
+    local clean = name:gsub("%-Mega.*", ""):gsub("%-Primal.*", "")
+    return clean
+end
+
+-- 2. Fonction pour conserver un historique de logs (max 5 lignes)
 local function logToTracker(msg)
     table.insert(logLines, msg)
     if #logLines > 5 then table.remove(logLines, 1) end
+    forceRender = true 
 end
 
--- 2. Fonction pour garantir que la fenêtre de tracking est bien ouverte
+-- 3. Fonction pour garantir que la fenêtre de tracking est bien ouverte
 local function ensureBuffers()
     if not trackerBuffer then
         trackerBuffer = console:createBuffer("Frags & Live Tracker")
@@ -39,7 +50,38 @@ local function ensureBuffers()
     end
 end
 
--- 3. Fonction de sauvegarde dans le fichier (Appelée uniquement à la fin du combat)
+-- 4. Fonction de rendu graphique (appelée UNIQUEMENT sur événement)
+local function renderUI()
+    ensureBuffers()
+    if not trackerBuffer then return end
+
+    trackerBuffer:clear()
+    
+    local displayId = (currentTrainerId ~= 0 and currentTrainerId) or lastTrainerDisplayId
+    
+    if displayId ~= 0 and fragStats[displayId] and partyOrders[displayId] then
+        if currentTrainerId ~= 0 then
+            trackerBuffer:print("=== FRAGS DU COMBAT (ID " .. displayId .. ") ===\n")
+        else
+            trackerBuffer:print("=== DERNIER COMBAT (ID " .. displayId .. ") ===\n")
+        end
+        
+        for _, pkm in ipairs(partyOrders[displayId]) do
+            local kills = fragStats[displayId][pkm] or 0
+            trackerBuffer:print("- " .. pkm .. " : " .. kills .. " frag(s)\n")
+        end
+        trackerBuffer:print("--------------------------\n\n")
+    else
+        trackerBuffer:print("=== AUCUN COMBAT DE DRESSEUR ===\n\n")
+    end
+    
+    trackerBuffer:print("=== DERNIÈRES ACTIONS ===\n")
+    for _, line in ipairs(logLines) do
+        trackerBuffer:print(line .. "\n")
+    end
+end
+
+-- 5. Sauvegarde dans le fichier JSON (fin de combat)
 local function saveJSON()
     local file = io.open("frags_by_trainer.json", "w")
     if not file then return end
@@ -69,12 +111,33 @@ local function saveJSON()
     file:close()
 end
 
+-- 6. Ajout d'un frag (rattaché au Pokémon de base)
 local function addFrag(pokemonName)
+    if not currentTrainerId or currentTrainerId == 0 then return end
+    
+    local baseName = cleanPokemonName(pokemonName)
+    
     if not fragStats[currentTrainerId] then
         fragStats[currentTrainerId] = {}
     end
-    local currentKills = fragStats[currentTrainerId][pokemonName] or 0
-    fragStats[currentTrainerId][pokemonName] = currentKills + 1
+    if not partyOrders[currentTrainerId] then
+        partyOrders[currentTrainerId] = {}
+    end
+    
+    local exists = false
+    for _, name in ipairs(partyOrders[currentTrainerId]) do
+        if name == baseName then
+            exists = true
+            break
+        end
+    end
+    if not exists then
+        table.insert(partyOrders[currentTrainerId], baseName)
+    end
+    
+    local currentKills = fragStats[currentTrainerId][baseName] or 0
+    fragStats[currentTrainerId][baseName] = currentKills + 1
+    forceRender = true 
 end
 
 local function getKillerName()
@@ -87,7 +150,8 @@ local function getKillerName()
         if partyIdx and partyIdx >= 0 and partyIdx < 6 then
             local pMon = party[partyIdx + 1] 
             if pMon and pMon.species ~= 0 then
-                return (mons and mons[pMon.species]) or "Inconnu"
+                local rawName = (mons and mons[pMon.species]) or "Inconnu"
+                return cleanPokemonName(rawName)
             end
         end
         return nil
@@ -131,7 +195,7 @@ local function exportBoxToTXT()
             if mon.species ~= 0 and mons and mons[mon.species] ~= nil then
                 out = out .. string.format(
                     "Name: %s\nNickname: %s\nMet Location: %s\nNature: %s\nAbility: %s\nIVs: HP %d / Atk %d / Def %d / SpA %d / SpD %d / Spe %d\n\n",
-                    mons[mon.species],
+                    cleanPokemonName(mons[mon.species]),
                     (mon.nickname ~= "" and mon.nickname) or "None",
                     getMetLocationName(mon.metLocation),
                     getNature(mon),
@@ -154,7 +218,7 @@ local function exportBoxToTXT()
                 if mon and mon.species ~= 0 and mons and mons[mon.species] ~= nil then
                     out = out .. string.format(
                         "Name: %s\nNickname: %s\nMet Location: %s\nNature: %s\nAbility: %s\nIVs: HP %d / Atk %d / Def %d / SpA %d / SpD %d / Spe %d\n\n",
-                        mons[mon.species],
+                        cleanPokemonName(mons[mon.species]),
                         (mon.nickname ~= "" and mon.nickname) or "None",
                         getMetLocationName(mon.metLocation),
                         getNature(mon),
@@ -171,47 +235,19 @@ local function exportBoxToTXT()
 end
 
 local function trackCombatDirect()
-    ensureBuffers()
-
     local outcome = emu:read8(gBattleOutcome)
     local tId = emu:read16(gTrainerBattleOpponent_A)
     local bCount = emu:read8(gBattlersCount)
     local bFlags = emu:read32(gBattleTypeFlags)
     
-    -- Vérifie mathématiquement si le bit "8" (Trainer Battle) est présent dans bFlags
     local isTrainerBattle = (math.floor(bFlags / 8) % 2 ~= 0)
-    
-    -- Le combat n'est validé QUE si c'est un Dresseur
     local inBattle = (bCount > 0 and outcome == 0 and tId ~= 0 and isTrainerBattle)
-
-    -- =====================================================
-    -- 📊 AFFICHAGE FRAGS & LOGS (Interface principale)
-    -- =====================================================
-    if trackerBuffer then
-        trackerBuffer:clear()
-        if currentTrainerId ~= 0 and fragStats[currentTrainerId] and partyOrders[currentTrainerId] then
-            trackerBuffer:print("=== FRAGS (DRESSEUR ID " .. currentTrainerId .. ") ===\n")
-            for _, pkm in ipairs(partyOrders[currentTrainerId]) do
-                local kills = fragStats[currentTrainerId][pkm] or 0
-                trackerBuffer:print("- " .. pkm .. " : " .. kills .. " frag(s)\n")
-            end
-            trackerBuffer:print("--------------------------\n\n")
-        else
-            trackerBuffer:print("=== AUCUN COMBAT DE DRESSEUR ===\n\n")
-        end
-        
-        trackerBuffer:print("=== DERNIÈRES ACTIONS ===\n")
-        for _, line in ipairs(logLines) do
-            trackerBuffer:print(line .. "\n")
-        end
-    end
     
-    -- =====================================================
-    -- LOGIQUE DE COMBAT
-    -- =====================================================
+    -- DÉBUT DE COMBAT
     if inBattle and not wasInBattle then
         wasInBattle = true
         currentTrainerId = tId
+        lastTrainerDisplayId = tId
         
         exportBoxToTXT()
         logToTracker("📦 Box exportée avec succès !")
@@ -230,7 +266,7 @@ local function trackCombatDirect()
                 fragStats[rId] = {}
                 partyOrders[rId] = {}
             end
-            logToTracker("⚠️ Relance détectée ! Frags réinitialisés en mémoire.")
+            logToTracker("⚠️ Relance détectée ! Frags réinitialisés.")
         else
             table.insert(trainerHistory, currentTrainerId)
             fragStats[currentTrainerId] = {}
@@ -245,7 +281,8 @@ local function trackCombatDirect()
         if party then
             for _, pMon in ipairs(party) do
                 if pMon and pMon.species ~= 0 then
-                    local pkmName = (mons and mons[pMon.species]) or "Inconnu"
+                    local rawName = (mons and mons[pMon.species]) or "Inconnu"
+                    local pkmName = cleanPokemonName(rawName)
                     if not fragStats[currentTrainerId][pkmName] then
                         fragStats[currentTrainerId][pkmName] = 0
                         table.insert(partyOrders[currentTrainerId], pkmName)
@@ -258,33 +295,41 @@ local function trackCombatDirect()
         
         for i = 1, 6 do
             local eMon = readPartyMon(gEnemyParty + (i - 1) * partyMonSize)
-            lastEnemyHP[i] = eMon.hp
+            lastEnemyHP[i] = (eMon and eMon.hp) or 0
         end
         
+    -- FIN DE COMBAT
     elseif not inBattle and wasInBattle then
         wasInBattle = false
         logToTracker("🏁 Fin du combat. Sauvegarde dans JSON...")
-        
         saveJSON()
-        
         currentTrainerId = 0
+        forceRender = true
     end
     
+    -- PENDANT LE COMBAT (Surveillance des KOs)
     if inBattle and currentTrainerId ~= 0 then
         local eCount = emu:read8(gEnemyPartyCount)
         for i = 1, eCount do
             local eMon = readPartyMon(gEnemyParty + (i - 1) * partyMonSize)
-            if eMon.species ~= 0 then
-                if lastEnemyHP[i] > 0 and eMon.hp == 0 then
-                    local enemyName = (mons and mons[eMon.species]) or "Espèce " .. eMon.species
+            if eMon and eMon.species ~= 0 then
+                local curHp = eMon.hp or 0
+                if lastEnemyHP[i] and lastEnemyHP[i] > 0 and curHp == 0 then
+                    local enemyName = (mons and mons[eMon.species]) or ("Espèce " .. eMon.species)
                     local killerName = getKillerName()
                     
                     addFrag(killerName)
                     logToTracker("💀 " .. enemyName .. " mis KO par " .. killerName)
                 end
-                lastEnemyHP[i] = eMon.hp
+                lastEnemyHP[i] = curHp
             end
         end
+    end
+
+    -- MISE À JOUR VISUELLE : Uniquement si un événement modifie l'état
+    if forceRender then
+        renderUI()
+        forceRender = false
     end
 end
 
@@ -292,9 +337,10 @@ local function initDirectTracker()
     trainerHistory = {}
     fragStats = {}
     partyOrders = {}
-    saveJSON()
+    saveJSON() 
     ensureBuffers()
     logToTracker("✅ Script démarré : Prêt à compter les frags !")
+    renderUI()
 end
 
 callbacks:add("start", initDirectTracker)
