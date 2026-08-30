@@ -3408,6 +3408,10 @@ abilities = {
 "Supersweet Syrup"
 }
 
+-- PP values dictionary (mapping move names to their base PP)
+movePPDict = {
+["Absorb"]=25,["Accelerock"]=20,["Acid"]=30,["Acid Armor"]=20,["Acid Spray"]=20,["Acrobatics"]=15,["Acupressure"]=30,["Aerial Ace"]=20,["Aeroblast"]=5,["After You"]=15,["Agility"]=30,["Air Cutter"]=25,["Air Slash"]=15,["Ally Switch"]=15,["Amnesia"]=20,["Anchor Shot"]=20,["Ancient Power"]=5,["Apple Acid"]=10,["Aqua Jet"]=20,["Aqua Ring"]=20,["Aqua Tail"]=10,["Arm Thrust"]=20,["Aromatherapy"]=5,["Aromatic Mist"]=20,["Assist"]=20,["Assurance"]=10,["Astonish"]=15,["Astral Barrage"]=5,["Attack Order"]=15,["Attract"]=15,["Aura Sphere"]=20,["Aura Wheel"]=10,["Aurora Beam"]=20,["Aurora Veil"]=20,["Autotomize"]=15,["Avalanche"]=10,["Baby-Doll Eyes"]=10,["Baneful Bunker"]=10,["Barrage"]=20,["Barrier"]=20,["Baton Pass"]=40,["Beak Blast"]=15,["Beat Up"]=10,["Belch"]=10,["Belly Drum"]=10,["Bestow"]=15,["Bide"]=10,["Bind"]=20,["Bite"]=25,["Blast Burn"]=5,["Blaze Kick"]=10,["Blizzard"]=5,["Block"]=5,["Blue Flare"]=5,["Body Press"]=10,["Body Slam"]=15,["Bolt Beak"]=10,["Bolt Strike"]=5,["Bone Club"]=20,["Bonemerang"]=10,["Bone Rush"]=10,["Boomburst"]=10,["Bounce"]=5,["Branch Poke"]=40,["Brave Bird"]=15,["Breaking Swipe"]=15,["Brick Break"]=15,["Brine"]=10,["Brutal Swing"]=20,["Bubble"]=30,["Bubble Beam"]=20,["Bug Bite"]=20,["Bug Buzz"]=10,["Bulk Up"]=20,["Bulldoze"]=20,["Bullet Punch"]=30,["Bullet Seed"]=30,["Burning Jealousy"]=5,["Burn Up"]=5,["Calm Mind"]=20,["Camouflage"]=20,["Captivate"]=5,["Celebrate"]=40,["Charge"]=20,["Charge Beam"]=10,["Charm"]=5,["Chatter"]=20,["Chip Away"]=20,["Circle Throw"]=10,["Clamp"]=15,["Clanging Scales"]=5,["Clangorous Soul"]=5,["Clear Smog"]=15,["Close Combat"]=5,["Coaching"]=10,["Coil"]=20,["Comet Punch"]=15,["Confide"]=20,["Confuse Ray"]=10,["Confusion"]=25,["Constrict"]=35,["Conversion"]=30,["Conversion 2"]=30,["Copycat"]=20,["Core Enforcer"]=10,["Corrosive Gas"]=40,["Cosmic Power"]=20,["Cotton Guard"]=10,["Cotton Spore"]=40,["Counter"]=20,["Court Change"]=10,["Covet"]=25,["Crabhammer"]=10,["Crafty Shield"]=10,["Cross Chop"]=5,["Cross Poison"]=20,["Crunch"]=15,["Crush Claw"]=10,["Crush Grip"]=5,["Curse"]=10,["Cut"]=30,["Darkest Lariat"]=10,["Dark Pulse"]=15,["Dark Void"]=10,["Dazzling Gleam"]=10,["Decorate"]=15,["Defend Order"]=10,["Defense Curl"]=40,["Defog"]=15,["Destiny Bond"]=5,["Detect"]=5,["Diamond Storm"]=5,["Dig"]=10,["Disable"]=20,["Disarming Voice"]=15,["Discharge"]=15,["Dive"]=10,["Dizzy Punch"]=10,["Doom Desire"]=5,["Double-Edge"]=15,["Double Hit"]=10,["Double Iron Bash"]=5,["Double Kick"]=30,["Double Slap"]=10,["Double Team"]=15,["Draco Meteor"]=5,["Dragon Ascent"]=5,["Dragon Breath"]=20,["Dragon Claw"]=15,["Dragon Dance"]=20,["Dragon Darts"]=10,["Dragon Energy"]=5,["Dragon Hammer"]=15,["Dragon Pulse"]=10,["Dragon Rage"]=10,["Dragon Rush"]=10,["Dragon Tail"]=10,["Draining Kiss"]=10,["Drain Punch"]=10,["Dream Eater"]=15,["Drill Peck"]=20,["Drill Run"]=10,["Drum Beating"]=10,["Dual Chop"]=15,["Dual Wingbeat"]=10,["Dynamic Punch"]=5,["Earth Power"]=10,["Earthquake"]=10,["Echoed Voice"]=15,["Eerie Impulse"]=5,["Eerie Spell"]=5,["Egg Bomb"]=10,["Electric Terrain"]=10,["Electrify"]=20,["Electro Ball"]=10,["Electroweb"]=15,["Embargo"]=15,["Ember"]=25,["Encore"]=5,["Endeavor"]=5,["Endure"]=10,["Energy Ball"]=10,["Entrainment"]=15,["Eruption"]=5,["Expanding Force"]=10,["Explosion"]=5,["Extrasensory"]=20,["Extreme Speed"]=5,["Facade"]=20,["Fairy Lock"]=10,["Fairy Wind"]=30,["Fake Out"]=5,["Fake Tears"]=5,["False Surrender"]=10,["False Swipe"]=40,["Feather Dance"]=5,["Feint"]=10,["Feint Attack"]=20,["Fell Stinger"]=25,["Fiery Dance"]=10,["Fiery Wrath"]=10,["Final Gambit"]=5,["Fire Blast"]=5,["Fire Fang"]=15,["Fire Lash"]=15,["Fire Pledge"]=10,["Fire Punch"]=15,["Fire Spin"]=15,["First Impression"]=10,["Fishious Rend"]=10,["Fissure"]=5,["Flail"]=15,["Flame Burst"]=15,["Flame Charge"]=20,["Flame Wheel"]=25,["Flamethrower"]=15,["Flare Blitz"]=15,["Flash"]=20,["Flash Cannon"]=10,["Flatter"]=15,["Fleur Cannon"]=5,["Fling"]=10,["Flip Turn"]=20,["Floral Healing"]=10,["Flower Shield"]=10,["Fly"]=15,["Flying Press"]=10,["Focus Blast"]=5,["Focus Energy"]=30,["Focus Punch"]=20,["Follow Me"]=20,["Force Palm"]=10,["Foresight"]=40,["Forest's Curse"]=20,["Foul Play"]=15,["Freeze-Dry"]=20,["Freeze Shock"]=5,["Freezing Glare"]=10,["Frenzy Plant"]=5,["Frost Breath"]=10,["Frustration"]=20,["Fury Attack"]=20,["Fury Cutter"]=20,["Fury Swipes"]=15,["Fusion Bolt"]=5,["Fusion Flare"]=5,["Future Sight"]=10,["Gastro Acid"]=10,["Gear Grind"]=15,["Gear Up"]=20,["Geomancy"]=10,["Giga Drain"]=10,["Giga Impact"]=5,["Glacial Lance"]=5,["Glaciate"]=10,["Glare"]=30,["Grass Knot"]=20,["Grass Pledge"]=10,["Grass Whistle"]=15,["Grassy Glide"]=20,["Grassy Terrain"]=10,["Grav Apple"]=10,["Gravity"]=5,["Growl"]=10,["Growth"]=20,["Grudge"]=5,["Guard Split"]=10,["Guard Swap"]=10,["Guillotine"]=5,["Gunk Shot"]=5,["Gust"]=35,["Gyro Ball"]=5,["Hail"]=10,["Hammer Arm"]=10,["Happy Hour"]=30,["Harden"]=5,["Haze"]=30,["Headbutt"]=15,["Head Charge"]=15,["Head Smash"]=5,["Heal Bell"]=5,["Heal Block"]=15,["Healing Wish"]=10,["Heal Order"]=10,["Heal Pulse"]=10,["Heart Stamp"]=25,["Heart Swap"]=10,["Heat Crash"]=10,["Heat Wave"]=10,["Heavy Slam"]=10,["Helping Hand"]=20,["Hex"]=10,["Hidden Power"]=15,["Hidden Power Bug"]=15,["Hidden Power Dark"]=15,["Hidden Power Dragon"]=15,["Hidden Power Electric"]=15,["Hidden Power Fighting"]=15,["Hidden Power Fire"]=15,["Hidden Power Flying"]=15,["Hidden Power Ghost"]=15,["Hidden Power Grass"]=15,["Hidden Power Ground"]=15,["Hidden Power Ice"]=15,["Hidden Power Poison"]=15,["Hidden Power Psychic"]=15,["Hidden Power Rock"]=15,["Hidden Power Steel"]=15,["Hidden Power Water"]=15,["High Horsepower"]=10,["High Jump Kick"]=10,["Hold Back"]=40,["Hold Hands"]=40,["Hone Claws"]=15,["Horn Attack"]=25,["Horn Drill"]=5,["Horn Leech"]=10,["Howl"]=40,["Hurricane"]=10,["Hydro Cannon"]=5,["Hydro Pump"]=5,["Hyper Beam"]=5,["Hyper Fang"]=15,["Hyperspace Fury"]=5,["Hyperspace Hole"]=5,["Hyper Voice"]=10,["Hypnosis"]=20,["Ice Ball"]=20,["Ice Beam"]=10,["Ice Burn"]=5,["Ice Fang"]=15,["Ice Hammer"]=10,["Ice Punch"]=15,["Ice Shard"]=30,["Icicle Crash"]=10,["Icicle Spear"]=30,["Icy Wind"]=15,["Imprison"]=10,["Incinerate"]=15,["Inferno"]=5,["Infestation"]=20,["Ingrain"]=20,["Instruct"]=15,["Ion Deluge"]=25,["Iron Defense"]=15,["Iron Head"]=15,["Iron Tail"]=15,["Jaw Lock"]=10,["Judgment"]=10,["Jump Kick"]=10,["Jungle Healing"]=10,["Karate Chop"]=25,["Kinesis"]=15,["King's Shield"]=10,["Knock Off"]=20,["Land's Wrath"]=10,["Laser Focus"]=30,["Lash Out"]=5,["Last Resort"]=5,["Lava Plume"]=15,["Leafage"]=40,["Leaf Blade"]=15,["Leaf Storm"]=5,["Leaf Tornado"]=10,["Leech Life"]=10,["Leech Seed"]=10,["Leer"]=10,["Lick"]=30,["Life Dew"]=10,["Light of Ruin"]=5,["Light Screen"]=30,["Liquidation"]=10,["Lock-On"]=5,["Lovely Kiss"]=10,["Low Kick"]=20,["Low Sweep"]=20,["Lucky Chant"]=30,["Lunar Blessing"]=5,["Lunar Dance"]=10,["Lunge"]=15,["Luster Purge"]=5,["Mach Punch"]=30,["Magical Leaf"]=20,["Magic Coat"]=15,["Magic Powder"]=20,["Magic Room"]=10,["Magma Storm"]=5,["Magnet Bomb"]=20,["Magnetic Flux"]=20,["Magnet Rise"]=10,["Magnitude"]=30,["Mat Block"]=10,["Mean Look"]=5,["Meditate"]=40,["Me First"]=20,["Mega Drain"]=15,["Megahorn"]=10,["Mega Kick"]=5,["Mega Punch"]=20,["Memento"]=10,["Metal Burst"]=10,["Metal Claw"]=35,["Metal Sound"]=5,["Meteor Assault"]=5,["Meteor Beam"]=10,["Meteor Mash"]=10,["Metronome"]=10,["Milk Drink"]=5,["Mimic"]=10,["Mind Blown"]=5,["Mind Reader"]=5,["Minimize"]=10,["Miracle Eye"]=40,["Mirror Coat"]=20,["Mirror Move"]=20,["Mirror Shot"]=10,["Mist"]=30,["Mist Ball"]=5,["Misty Explosion"]=5,["Misty Terrain"]=10,["Moonblast"]=15,["Moongeist Beam"]=5,["Moonlight"]=5,["Morning Sun"]=5,["Mud Bomb"]=10,["Mud Shot"]=15,["Mud-Slap"]=10,["Mud Sport"]=15,["Muddy Water"]=10,["Multi-Attack"]=10,["Mystical Fire"]=10,["Mystical Power"]=10,["Nasty Plot"]=20,["Natural Gift"]=15,["Nature Power"]=20,["Nature's Madness"]=10,["Needle Arm"]=15,["Night Daze"]=10,["Nightmare"]=15,["Night Shade"]=15,["Night Slash"]=15,["Noble Roar"]=10,["No Retreat"]=5,["Nuzzle"]=20,["Oblivion Wing"]=10,["Obstruct"]=10,["Octazooka"]=10,["Octolock"]=15,["Odor Sleuth"]=40,["Ominous Wind"]=5,["Origin Pulse"]=10,["Outrage"]=10,["Overdrive"]=10,["Overheat"]=5,["Pain Split"]=20,["Parabolic Charge"]=20,["Parting Shot"]=20,["Payback"]=10,["Pay Day"]=20,["Peck"]=35,["Perish Song"]=5,["Petal Blizzard"]=15,["Petal Dance"]=10,["Phantom Force"]=10,["Photon Geyser"]=5,["Pin Missile"]=20,["Plasma Fists"]=15,["Play Nice"]=10,["Play Rough"]=10,["Pluck"]=20,["Poison Fang"]=15,["Poison Gas"]=40,["Poison Jab"]=20,["Poison Powder"]=35,["Poison Sting"]=35,["Poison Tail"]=25,["Pollen Puff"]=15,["Poltergeist"]=5,["Pound"]=35,["Powder"]=20,["Powder Snow"]=25,["Power Gem"]=20,["Power Split"]=10,["Power Swap"]=10,["Power Trick"]=10,["Power Trip"]=10,["Power-Up Punch"]=20,["Power Whip"]=10,["Precipice Blades"]=10,["Present"]=15,["Prismatic Laser"]=10,["Protect"]=10,["Psybeam"]=20,["Psych Up"]=10,["Psychic"]=10,["Psychic Fangs"]=10,["Psychic Terrain"]=10,["Psycho Boost"]=5,["Psycho Cut"]=20,["Psycho Shift"]=10,["Psyshock"]=10,["Psystrike"]=10,["Psywave"]=15,["Punishment"]=5,["Purify"]=20,["Pursuit"]=20,["Pyro Ball"]=5,["Quash"]=15,["Quick Attack"]=30,["Quick Guard"]=15,["Quiver Dance"]=20,["Rage"]=20,["Rage Fist"]=10,["Rage Powder"]=20,["Rain Dance"]=5,["Rapid Spin"]=40,["Razor Leaf"]=25,["Razor Shell"]=10,["Razor Wind"]=10,["Recover"]=5,["Recycle"]=10,["Reflect"]=20,["Reflect Type"]=15,["Refresh"]=20,["Relic Song"]=10,["Rest"]=5,["Retaliate"]=5,["Return"]=20,["Revelation Dance"]=15,["Revenge"]=10,["Reversal"]=15,["Rising Voltage"]=20,["Roar"]=20,["Roar of Time"]=5,["Rock Blast"]=10,["Rock Climb"]=20,["Rock Polish"]=20,["Rock Slide"]=10,["Rock Smash"]=15,["Rock Throw"]=15,["Rock Tomb"]=15,["Rock Wrecker"]=5,["Role Play"]=10,["Rolling Kick"]=15,["Rollout"]=20,["Roost"]=5,["Rototiller"]=10,["Round"]=15,["Sacred Fire"]=5,["Sacred Sword"]=15,["Safeguard"]=25,["Sand Attack"]=5,["Sandstorm"]=10,["Sand Tomb"]=15,["Scald"]=15,["Scale Shot"]=20,["Scary Face"]=10,["Scorching Sands"]=10,["Scratch"]=35,["Screech"]=5,["Searing Shot"]=5,["Secret Power"]=20,["Secret Sword"]=10,["Seed Bomb"]=15,["Seed Flare"]=5,["Seismic Toss"]=20,["Self-Destruct"]=5,["Shadow Ball"]=15,["Shadow Bone"]=10,["Shadow Claw"]=15,["Shadow Force"]=5,["Shadow Punch"]=20,["Shadow Sneak"]=30,["Sharpen"]=30,["Sheer Cold"]=5,["Shell Side Arm"]=10,["Shell Smash"]=15,["Shell Trap"]=5,["Shift Gear"]=10,["Shock Wave"]=20,["Shore Up"]=5,["Signal Beam"]=15,["Silver Wind"]=5,["Simple Beam"]=15,["Sing"]=15,["Sketch"]=1,["Skill Swap"]=10,["Skitter Smack"]=10,["Skull Bash"]=10,["Sky Attack"]=5,["Sky Drop"]=10,["Sky Uppercut"]=15,["Slack Off"]=5,["Slam"]=20,["Slash"]=20,["Sleep Powder"]=15,["Sleep Talk"]=10,["Sludge"]=20,["Sludge Bomb"]=10,["Sludge Wave"]=10,["Smack Down"]=15,["Smart Strike"]=10,["Smelling Salts"]=10,["Smog"]=20,["Smokescreen"]=20,["Snap Trap"]=15,["Snarl"]=10,["Snatch"]=10,["Snipe Shot"]=15,["Snore"]=15,["Soak"]=20,["Soft-Boiled"]=5,["Solar Beam"]=10,["Solar Blade"]=10,["Sonic Boom"]=20,["Spacial Rend"]=5,["Spark"]=20,["Sparkling Aria"]=10,["Spectral Thief"]=10,["Speed Swap"]=10,["Spider Web"]=10,["Spike Cannon"]=15,["Spikes"]=20,["Spiky Shield"]=10,["Spirit Break"]=15,["Spirit Shackle"]=10,["Spit Up"]=10,["Spite"]=10,["Splash"]=40,["Spore"]=15,["Spotlight"]=15,["Stealth Rock"]=20,["Steam Eruption"]=5,["Steamroller"]=20,["Steel Beam"]=5,["Steel Roller"]=5,["Steel Wing"]=25,["Sticky Web"]=20,["Stockpile"]=20,["Stomp"]=20,["Stomping Tantrum"]=10,["Stone Edge"]=5,["Stored Power"]=10,["Storm Throw"]=10,["Strange Steam"]=10,["Strength"]=15,["Strength Sap"]=10,["String Shot"]=40,["Struggle"]=1,["Struggle Bug"]=10,["Stuff Cheeks"]=10,["Stun Spore"]=30,["Submission"]=20,["Substitute"]=10,["Sucker Punch"]=5,["Sunny Day"]=5,["Sunsteel Strike"]=5,["Super Fang"]=10,["Superpower"]=5,["Supersonic"]=20,["Surf"]=15,["Surging Strikes"]=5,["Swagger"]=15,["Swallow"]=10,["Sweet Kiss"]=10,["Sweet Scent"]=20,["Swift"]=20,["Switcheroo"]=10,["Swords Dance"]=20,["Synchronoise"]=10,["Synthesis"]=5,["Tackle"]=35,["Tail Glow"]=20,["Tail Slap"]=10,["Tail Whip"]=30,["Tailwind"]=15,["Take Down"]=20,["Tar Shot"]=15,["Taunt"]=20,["Tearful Look"]=10,["Teatime"]=10,["Techno Blast"]=5,["Teeter Dance"]=20,["Telekinesis"]=15,["Teleport"]=20,["Terrain Pulse"]=10,["Thief"]=25,["Thousand Arrows"]=10,["Thousand Waves"]=10,["Thrash"]=10,["Throat Chop"]=15,["Thunder"]=10,["Thunderbolt"]=15,["Thunder Cage"]=15,["Thunder Fang"]=15,["Thunderous Kick"]=10,["Thunder Punch"]=15,["Thunder Shock"]=30,["Thunder Wave"]=20,["Tickle"]=10,["Topsy-Turvy"]=20,["Torment"]=15,["Toxic"]=10,["Toxic Spikes"]=20,["Toxic Thread"]=20,["Transform"]=10,["Tri Attack"]=10,["Trick"]=10,["Trick-or-Treat"]=20,["Trick Room"]=5,["Triple Axel"]=10,["Triple Kick"]=10,["Trop Kick"]=15,["Trump Card"]=5,["Twineedle"]=20,["Twister"]=20,["U-turn"]=20,["Uproar"]=10,["Vacuum Wave"]=30,["V-create"]=5,["Venom Drench"]=20,["Venoshock"]=10,["Vine Whip"]=25,["Vise Grip"]=30,["Vital Throw"]=10,["Volt Switch"]=20,["Volt Tackle"]=15,["Wake-Up Slap"]=10,["Waterfall"]=15,["Water Gun"]=25,["Water Pledge"]=10,["Water Pulse"]=20,["Water Shuriken"]=20,["Water Sport"]=15,["Water Spout"]=5,["Weather Ball"]=10,["Whirlpool"]=15,["Whirlwind"]=20,["Wicked Blow"]=5,["Wide Guard"]=10,["Wild Charge"]=15,["Will-O-Wisp"]=15,["Wing Attack"]=35,["Wish"]=10,["Withdraw"]=40,["Wonder Room"]=10,["Wood Hammer"]=15,["Work Up"]=30,["Worry Seed"]=10,["Wrap"]=20,["Wring Out"]=5,["X-Scissor"]=15,["Yawn"]=10,["Zap Cannon"]=5,["Zen Headbutt"]=15,["Zing Zap"]=10}
+
 nature = {"Hardy","Lonely","Brave","Adamant","Naughty",
 			"Bold","Docile","Relaxed","Impish","Lax",
 			"Timid","Hasty","Serious","Jolly","Naive",
@@ -3417,10 +3421,10 @@ nature = {"Hardy","Lonely","Brave","Adamant","Naughty",
 charmap = { [0]=
 	" ", "À", "Á", "Â", "Ç", "È", "É", "Ê", "Ë", "Ì", "こ", "Î", "Ï", "Ò", "Ó", "Ô",
 	"Œ", "Ù", "Ú", "Û", "Ñ", "ß", "à", "á", "ね", "ç", "è", "é", "ê", "ë", "ì", "ま",
-	"î", "ï", "ò", "ó", "ô", "œ", "ù", "ú", "û", "ñ", "º", "ª", "�", "&", "+", "あ",
+	"î", "ï", "ò", "ó", "ô", "œ", "ù", "ú", "û", "ñ", "º", "ª", " ", "&", "+", "あ",
 	"ぃ", "ぅ", "ぇ", "ぉ", "v", "=", "ょ", "が", "ぎ", "ぐ", "げ", "ご", "ざ", "じ", "ず", "ぜ",
 	"ぞ", "だ", "ぢ", "づ", "で", "ど", "ば", "び", "ぶ", "べ", "ぼ", "ぱ", "ぴ", "ぷ", "ぺ", "ぽ",
-	"っ", "¿", "¡", "P\u{200d}k", "M\u{200d}n", "P\u{200d}o", "K\u{200d}é", "�", "�", "�", "Í", "%", "(", ")", "セ", "ソ",
+	"っ", "¿", "¡", "P\u{200d}k", "M\u{200d}n", "P\u{200d}o", "K\u{200d}é", " ", " ", " ", "Í", "%", "(", ")", "セ", "ソ",
 	"タ", "チ", "ツ", "テ", "ト", "ナ", "ニ", "ヌ", "â", "ノ", "ハ", "ヒ", "フ", "ヘ", "ホ", "í",
 	"ミ", "ム", "メ", "モ", "ヤ", "ユ", "ヨ", "ラ", "リ", "⬆", "⬇", "⬅", "➡", "ヲ", "ン", "ァ",
 	"ィ", "ゥ", "ェ", "ォ", "ャ", "ュ", "ョ", "ガ", "ギ", "グ", "ゲ", "ゴ", "ザ", "ジ", "ズ", "ゼ",
@@ -3430,7 +3434,7 @@ charmap = { [0]=
 	"F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U",
 	"V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k",
 	"l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "▶",
-	":", "Ä", "Ö", "Ü", "ä", "ö", "ü", "⬆", "⬇", "⬅", "�", "�", "�", "�", "�", ""
+	":", "Ä", "Ö", "Ü", "ä", "ö", "ü", "⬆", "⬇", "⬅", " ", " ", " ", " ", " ", ""
 }
 
 metLocations = {
@@ -3711,7 +3715,7 @@ local partyMonSize=104
 local partyloc=0x2005370 --gPlayerParty
 local partyCount=0x200536d --gPlayerPartyCount
 local storageLoc=0x200a154 -- gPokemonStorage
-local speciesInfo=0x83dfb28 -- gSpeciesInfo
+local speciesInfo=0x83e0448 -- gSpeciesInfo
 
 
 
@@ -3782,14 +3786,31 @@ function getParty()
 end
 
 function toString(rawstring)
-	local string = ""
-	for _, char in ipairs({rawstring:byte(1, #rawstring)}) do
-		if char == terminator then
-			break
-		end
-		string = string..charmap[char]
-	end
-	return string
+    local result = ""
+
+    for i = 1, #rawstring do
+        local char = rawstring:byte(i)
+
+        local mapped
+        if char == 0xFF then
+            -- Fin de chaîne, arrêt immédiat
+            break
+        elseif char == 0x00 then
+            -- Espace standard Pokémon GBA
+            mapped = " "
+        else
+            mapped = charmap[char]
+        end
+
+        -- Sécurité anti-crash si le caractère n'est pas dans la charmap
+        if mapped ~= nil and mapped ~= "" then
+            result = result .. mapped
+        end
+    end
+
+    -- Filtre regex : supprime les caractères non imprimables et l'octet de langue parasite (Á)
+    result = result:gsub("[^\32-\126]", "")
+    return result
 end
 
 function getSlotAddress(slot)
@@ -3947,6 +3968,156 @@ function setBoxMon(address, newNature, IVs, moveSlot, moveName, level, species, 
 		emu:write32(address + 32 + 4 + pSel[4] * 12 + i * 4, ss3[i] ~ key)
 	end
 end
+
+-- Modifie les PP d'une attaque spécifique (ou recalcule le max si ppValue est nil)
+function setOnePP(slot, moveSlot, ppValue)
+    if (moveSlot < 1 or moveSlot > 4) then
+        console:log("Invalid move slot number silly :3")
+        return
+    end
+
+    local address = getSlotAddress(slot)
+    if not address then return end
+
+    local mon = readBoxMon(address)
+    local key = mon.otId ~ mon.personality
+
+    local substructSelector = {
+        [ 0] = {0, 1, 2, 3}, [ 1] = {0, 1, 3, 2}, [ 2] = {0, 2, 1, 3}, [ 3] = {0, 3, 1, 2},
+        [ 4] = {0, 2, 3, 1}, [ 5] = {0, 3, 2, 1}, [ 6] = {1, 0, 2, 3}, [ 7] = {1, 0, 3, 2},
+        [ 8] = {2, 0, 1, 3}, [ 9] = {3, 0, 1, 2}, [10] = {2, 0, 3, 1}, [11] = {3, 0, 2, 1},
+        [12] = {1, 2, 0, 3}, [13] = {1, 3, 0, 2}, [14] = {2, 1, 0, 3}, [15] = {3, 1, 0, 2},
+        [16] = {2, 3, 0, 1}, [17] = {3, 2, 0, 1}, [18] = {1, 2, 3, 0}, [19] = {1, 3, 2, 0},
+        [20] = {2, 1, 3, 0}, [21] = {3, 1, 2, 0}, [22] = {2, 3, 1, 0}, [23] = {3, 2, 1, 0},
+    }
+
+    local pSel = substructSelector[mon.personality % 24]
+    local ss0, ss1, ss2, ss3 = {}, {}, {}, {}
+
+    -- Lecture des 4 sous-structures chiffrées (décalage + 32 + 4 pour Pokémon Null)
+    for i = 0, 2 do
+        ss0[i] = emu:read32(address + 32 + 4 + pSel[1] * 12 + i * 4) ~ key
+        ss1[i] = emu:read32(address + 32 + 4 + pSel[2] * 12 + i * 4) ~ key
+        ss2[i] = emu:read32(address + 32 + 4 + pSel[3] * 12 + i * 4) ~ key
+        ss3[i] = emu:read32(address + 32 + 4 + pSel[4] * 12 + i * 4) ~ key
+    end
+
+    -- Calcul automatique des PP max si aucune valeur n'est fournie
+    if ppValue == nil then
+        local moveId = 0
+        if moveSlot == 1 then
+            moveId = ss1[0] & 0xFFFF
+        elseif moveSlot == 2 then
+            moveId = ss1[0] >> 16
+        elseif moveSlot == 3 then
+            moveId = ss1[1] & 0xFFFF
+        elseif moveSlot == 4 then
+            moveId = ss1[1] >> 16
+        end
+
+        if moveId == 0 then
+            ppValue = 0
+        else
+            local moveName = move[moveId + 1] or "Unknown"
+            local basePP = (movePPDict and movePPDict[moveName]) or 10
+
+            -- Bonus PP Up stockés sur 2 bits par move dans ss0[2]
+            local moveBonus = ((mon.ppBonuses or 0) >> ((moveSlot - 1) * 2)) & 0x3
+            ppValue = math.floor(basePP * (1 + moveBonus * 0.2))
+        end
+    end
+
+    -- Écriture des PP dans ss1[2]
+    if moveSlot == 1 then
+        ss1[2] = (ss1[2] & 0xFFFFFF00) | (ppValue & 0xFF)
+    elseif moveSlot == 2 then
+        ss1[2] = (ss1[2] & 0xFFFF00FF) | ((ppValue & 0xFF) << 8)
+    elseif moveSlot == 3 then
+        ss1[2] = (ss1[2] & 0xFF00FFFF) | ((ppValue & 0xFF) << 16)
+    elseif moveSlot == 4 then
+        ss1[2] = (ss1[2] & 0x00FFFFFF) | ((ppValue & 0xFF) << 24)
+    end
+
+    -- Recalcul et écriture du checksum à l'offset 0x1E
+    local checksum = 0
+    for i = 0, 2 do
+        checksum = checksum + (ss0[i] & 0xFFFF) + (ss0[i] >> 16)
+        checksum = checksum + (ss1[i] & 0xFFFF) + (ss1[i] >> 16)
+        checksum = checksum + (ss2[i] & 0xFFFF) + (ss2[i] >> 16)
+        checksum = checksum + (ss3[i] & 0xFFFF) + (ss3[i] >> 16)
+    end
+    checksum = checksum & 0xFFFF
+    emu:write16(address + CHECKSUM_OFFSET, checksum)
+
+    -- Réécriture des sous-structures rechiffrées
+    for i = 0, 2 do
+        emu:write32(address + 32 + 4 + pSel[1] * 12 + i * 4, ss0[i] ~ key)
+        emu:write32(address + 32 + 4 + pSel[2] * 12 + i * 4, ss1[i] ~ key)
+        emu:write32(address + 32 + 4 + pSel[3] * 12 + i * 4, ss2[i] ~ key)
+        emu:write32(address + 32 + 4 + pSel[4] * 12 + i * 4, ss3[i] ~ key)
+    end
+end
+
+-- Applique le changement de PP à un slot ou à toute l'équipe
+function setPP(slot, moveSlot, ppValue)
+    local currentCount = emu:read8(partyCount)
+
+    if slot == nil then
+        for s = 1, currentCount do
+            setPP(s, moveSlot, ppValue)
+        end
+        return
+    end
+
+    if slot < 1 or slot > currentCount then
+        console:log("Invalid slot number silly :3")
+        return
+    end
+
+    if moveSlot == nil then
+        for m = 1, 4 do
+            setOnePP(slot, m, ppValue)
+        end
+    else
+        setOnePP(slot, moveSlot, ppValue)
+    end
+end
+
+-- Raccourci pour soigner toute l'équipe
+function healparty()
+    heal()
+end
+
+function presleep(slot)
+    local address = getSlotAddress(slot)
+    if address then emu:write32(address + 80, 1 << 0 | 1 << 1 | 1 << 2) end
+end
+
+function prepoison(slot)
+    local address = getSlotAddress(slot)
+    if address then emu:write32(address + 80, 1 << 3) end
+end
+
+function preburn(slot)
+    local address = getSlotAddress(slot)
+    if address then emu:write32(address + 80, 1 << 4) end
+end
+
+function prefreeze(slot)
+    local address = getSlotAddress(slot)
+    if address then emu:write32(address + 80, 1 << 5) end
+end
+
+function prepara(slot)
+    local address = getSlotAddress(slot)
+    if address then emu:write32(address + 80, 1 << 6) end
+end
+
+function pretoxic(slot)
+    local address = getSlotAddress(slot)
+    if address then emu:write32(address + 80, 1 << 7) end
+end
+
 
 function setIVs(slot, IVs)
 	local address = getSlotAddress(slot)
@@ -4433,6 +4604,21 @@ function addItem(mon)
     return str
 end
 
+
+function heal(slot)
+    if slot == nil then
+        for s = 1, emu:read8(partyCount) do
+            heal(s)
+        end
+        return
+    end
+    local address = getSlotAddress(slot)
+    local maxHP = emu:read16(address + 88)
+    predamage(slot, maxHP)
+    setPP(slot)
+end
+
+
 function predamage(slot, damage)
     local address = getSlotAddress(slot)
     local maxHP = emu:read16(address + 88 + 4) -- null address diff
@@ -4707,12 +4893,12 @@ function startScript()
 
 	if not helpBuffer then
 		helpBuffer = console:createBuffer("Help Text")
-		helpBuffer:setSize(200, 250)
+		helpBuffer:setSize(250, 300)
 		helpBuffer:clear()
 		helpBuffer:print('To update your exports type `export()`\n')
 		helpBuffer:print('To update your exports with held items type `exportItem()`\n')
-		helpBuffer:print('To update your exports with préburn/toxic (via orb held item) for guts/façade mon type `exportStatus()`\n')
-		helpBuffer:print('To update your exports with a specific level type `export(Level)` or `exportItem(Level)`\n')
+		helpBuffer:print('To update your exports with preburn/toxic type `exportStatus()`\n')
+		helpBuffer:print('To update your exports with a specific level type `export(Level)`\n')
 		helpBuffer:print('To update hidden powers type `hiddens()`\n')
 		helpBuffer:print('To perfect a mon: `perfect(slotNum, "Nature")`\n')
 		helpBuffer:print('To set a move: `setMove(slotNum, moveSlotNum, "MoveName")`\n')
@@ -4724,7 +4910,10 @@ function startScript()
 		helpBuffer:print('To set ability slot: `setAbility(slotNum, abilityNum)`\n')
 		helpBuffer:print('To set item: `setItem(slotNum, "Item")`\n')
 		helpBuffer:print('To pre-damage: `predamage(slotNum, desiredHP)`\n')
-
+		helpBuffer:print('To heal a mon / party: `heal(slotNum)` or `healparty()`\n')
+		helpBuffer:print('To pre-status: `prepoison(slotNum)`, `preburn(slotNum)`, `pretoxic(slotNum)`, `prepara(slotNum)`, `presleep(slotNum)`, `prefreeze(slotNum)`\n')
+		helpBuffer:print('To heal status only: `healStatus(slotNum)`\n')
+		helpBuffer:print('To restore/set PP: `setPP(slotNum, [moveSlotNum], [ppValue])`\n')
 		helpBuffer:print('To set shiny: `setShiny(slotNum)`\n')
 		helpBuffer:print('To randomize the nature and IVs of a mon (Soft bag): `randomMon(slotNum)`\n')
 	end
@@ -4850,7 +5039,7 @@ function exportFull(buffer)
     end
 
         -- DEAD BOXES
-    local totalBoxMons = 120
+    local totalBoxMons = 90
     local slotSize = 84
     local boxBaseAddress = storageLoc + 4 + 11*slotSize*30
 
