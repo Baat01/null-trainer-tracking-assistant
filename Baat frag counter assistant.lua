@@ -1,5 +1,5 @@
 -- =====================================================================
--- AUTO-TRACKER LUA : AUTO-DÉCHIFFREMENT GBA & ALERTES (V29)
+-- AUTO-TRACKER LUA : AUTO-DÉCHIFFREMENT GBA & ALERTES (V30)
 -- =====================================================================
 
 local gPlayerPartyCount = 0x0200536D
@@ -26,7 +26,6 @@ local fragStats = {}
 local partyOrders = {} 
 
 local trackerBuffer = nil
-local debugBuffer = nil
 local logLines = {}
 local forceRender = false
 local frameCounter = 0
@@ -125,46 +124,17 @@ local function dumpDetailedTraceback(reason, extraInfo)
     file:close()
 end
 
--- 6. Initialisation Buffers
+-- 6. Initialisation Buffers (Debug supprimé)
 local function ensureBuffers()
     if not trackerBuffer then
         trackerBuffer = console:createBuffer("Frags & Live Tracker")
         if trackerBuffer then trackerBuffer:setSize(350, 400) end
-    end
-    if not debugBuffer then
-        debugBuffer = console:createBuffer("Debug Tracker")
-        if debugBuffer then debugBuffer:setSize(300, 350) end
     end
 end
 
 -- 7. Rendu graphique
 local function renderUI(bCount, outcome, tId, bFlags, isTrainerBattle, inBattle)
     ensureBuffers()
-    
-    local party = (getParty and getParty()) or {}
-    local pIdx0 = getBattlerPartyIndex(0)
-    local pIdx2 = getBattlerPartyIndex(2)
-    local mon0 = party[pIdx0 + 1]
-    local mon2 = party[pIdx2 + 1]
-    local sp0 = resolveSpeciesId(mon0)
-    local sp2 = resolveSpeciesId(mon2)
-    local name0 = (mons and mons[sp0]) or "N/A"
-    local name2 = (mons and mons[sp2]) or "N/A"
-
-    if debugBuffer then
-        debugBuffer:clear()
-        debugBuffer:print("=== 🐛 SUPER DEBUG EN DIRECT ===\n")
-        debugBuffer:print("Trainer A RAM  : " .. tostring(tId or 0) .. "\n")
-        debugBuffer:print("Trainer B RAM  : " .. tostring(emu:read16(gTrainerBattleOpponent_B)) .. "\n")
-        debugBuffer:print("inBattle (Lua) : " .. tostring(inBattle) .. "\n")
-        debugBuffer:print("BattlersCount  : " .. tostring(bCount or 0) .. "\n")
-        debugBuffer:print("RAM PartyCount : " .. tostring(emu:read8(gPlayerPartyCount)) .. "\n")
-        debugBuffer:print("------------------------------\n")
-        debugBuffer:print(string.format("Slot 1 (B0): [Idx %d] %s\n", pIdx0, name0))
-        debugBuffer:print(string.format("Slot 2 (B2): [Idx %d] %s\n", pIdx2, name2))
-        debugBuffer:print("Attacker ID    : " .. tostring(emu:read8(gBattlerAttacker)) .. "\n")
-        debugBuffer:print("==============================\n")
-    end
 
     if trackerBuffer then
         trackerBuffer:clear()
@@ -310,61 +280,21 @@ local function getKillerName()
     return "Non attribué"
 end
 
--- 11. Export Box
+-- 11. Export Box (Délégué à exportFull de Baat Tracking Script)
 local function exportBoxToTXT()
     local file = io.open("box_data.txt", "w")
     if not file then return end
     
-    local out = ""
-    if getParty then
-        for _, mon in ipairs(getParty()) do
-            local spId = resolveSpeciesId(mon)
-            if spId ~= 0 and mons and mons[spId] ~= nil then
-                local monName = cleanPokemonName(mons[spId])
-                if monName ~= "Inconnu" then
-                    out = out .. string.format(
-                        "Name: %s\nNickname: %s\nMet Location: %s\nNature: %s\nAbility: %s\nIVs: HP %d / Atk %d / Def %d / SpA %d / SpD %d / Spe %d\n\n",
-                        monName,
-                        (mon.nickname ~= "" and mon.nickname) or "None",
-                        getMetLocationName(mon.metLocation),
-                        getNature(mon),
-                        getAbility(mon),
-                        mon.hpIV or 0, mon.attackIV or 0, mon.defenseIV or 0,
-                        mon.spAttackIV or 0, mon.spDefenseIV or 0, mon.speedIV or 0
-                    )
-                end
+    if exportFull then
+        local fileBuffer = {
+            clear = function(self) end,
+            print = function(self, text)
+                file:write(text)
             end
-        end
+        }
+        exportFull(fileBuffer)
     end
     
-    if storageLoc and readBoxMon then
-        local boxBaseAddress = storageLoc + 4
-        local totalBoxMons = 420 
-        local slotSize = 84
-        for i = 0, totalBoxMons - 1 do
-            local address = boxBaseAddress + i * slotSize
-            if emu:read32(address) ~= 0 then
-                local mon = readBoxMon(address)
-                local spId = resolveSpeciesId(mon)
-                if spId ~= 0 and mons and mons[spId] ~= nil then
-                    local monName = cleanPokemonName(mons[spId])
-                    if monName ~= "Inconnu" then
-                        out = out .. string.format(
-                            "Name: %s\nNickname: %s\nMet Location: %s\nNature: %s\nAbility: %s\nIVs: HP %d / Atk %d / Def %d / SpA %d / SpD %d / Spe %d\n\n",
-                            monName,
-                            (mon.nickname ~= "" and mon.nickname) or "None",
-                            getMetLocationName(mon.metLocation),
-                            getNature(mon),
-                            getAbility(mon),
-                            mon.hpIV or 0, mon.attackIV or 0, mon.defenseIV or 0,
-                            mon.spAttackIV or 0, mon.spDefenseIV or 0, mon.speedIV or 0
-                        )
-                    end
-                end
-            end
-        end
-    end
-    file:write(out)
     file:close()
 end
 
@@ -455,16 +385,23 @@ local function trackCombatDirect()
     
     -- PENDANT LE COMBAT
     if inBattle and currentTrainerId ~= 0 then
+        local isSpecialBugTrainer = (currentTrainerId == 794 or currentTrainerId == 795 or currentTrainerBId == 794 or currentTrainerBId == 795)
+
         for i = 1, 6 do
             local eMon = readPartyMon(gEnemyParty + (i - 1) * partyMonSize)
             if eMon and eMon.species ~= 0 then
                 local curHp = eMon.hp or 0
                 if lastEnemyHP[i] and lastEnemyHP[i] > 0 and curHp == 0 then
-                    local enemyName = (mons and mons[eMon.species]) or ("Espèce " .. eMon.species)
-                    local killerName = getKillerName()
-                    
-                    addFrag(killerName)
-                    logToTracker("💀 " .. enemyName .. " mis KO par " .. killerName)
+                    -- Filtre anti-bug sur les dresseurs 794 / 795
+                    if isSpecialBugTrainer and eMon.species > 5000 then
+                        -- Espèce buggée ignorée
+                    else
+                        local enemyName = (mons and mons[eMon.species]) or ("Espèce " .. eMon.species)
+                        local killerName = getKillerName()
+                        
+                        addFrag(killerName)
+                        logToTracker("💀 " .. enemyName .. " mis KO par " .. killerName)
+                    end
                 end
                 lastEnemyHP[i] = curHp
             else
@@ -487,7 +424,7 @@ local function initDirectTracker()
     partyOrders = {}
     saveJSON() 
     ensureBuffers()
-    logToTracker("✅ Tracker prêt (Auto-Déchiffrement Actif)")
+    logToTracker("✅ Tracker prêt")
     renderUI(0, 0, 0, 0, false, false)
 end
 
