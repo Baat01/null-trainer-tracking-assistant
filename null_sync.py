@@ -14,13 +14,74 @@ from oauth2client.service_account import ServiceAccountCredentials
 # ==========================================
 # CONFIGURATION
 # ==========================================
-# L'URL sera chargée dynamiquement au lancement
 SPREADSHEET_URL = "" 
 SHEET_URL_FILE = "sheet_url.txt"
 CREDENTIALS_FILE = "credentials.json"
 TRAINERS_FILE = "trainers.json"
 FRAGS_FILE = "frags_by_trainer.json"
 BOX_FILE = "box_data.txt"
+
+CURRENT_LANG = "FR"
+
+# Dictionnaire de traduction
+TXT = {
+    "FR": {
+        "title": "Google Sheets Auto-Sync",
+        "sync_now": "🔄 Synchroniser Maintenant",
+        "auto_sync": "Synchronisation Automatique",
+        "interval": "Intervalle (minutes) :",
+        "enable_auto": "▶ Activer Auto-Sync",
+        "disable_auto": "⏹ Arrêter Auto-Sync",
+        "status_wait": "Statut : En attente",
+        "status_auto_off": "Statut : Auto-Sync Désactivé",
+        "status_auto_on": "Statut : Auto-Sync Actif (toutes les {} min)",
+        "err_num": "Veuillez entrer un nombre entier positif.",
+        "welcome": "Bienvenue dans le Null Tracker Sync !\nL'outil est connecté à ta Google Sheet et prêt.\n",
+        "auto_stop_log": "\n⏹️ Mode Automatique arrêté.",
+        "auto_start_log": "\n▶️ Mode Automatique activé. Prochaine synchro dans {} minute(s).",
+        "sync_start": "\n--- DÉBUT DE LA SYNCHRONISATION ---",
+        "sync_end": "--- FIN DE LA SYNCHRONISATION ---",
+        "import_box": "▶ Importation de la Box en cours...",
+        "no_box": "  Fichier box_data.txt introuvable. Ignoré.",
+        "box_success": "  ✔ {} Pokémon importé(s) avec succès !",
+        "box_empty": "  Aucun nouveau Pokémon à importer.",
+        "update_frags": "▶ Mise à jour des Frags en cours...",
+        "no_frags": "  Aucune donnée de frags trouvée.",
+        "frags_success": "  ✔ Frags mis à jour pour {} dresseur(s) regroupé(s) !",
+        "err_sheet": "❌ [Erreur Sheet] Dresseur ID {} ('{}') est introuvable dans la Google Sheet.",
+        "err_sync": "❌ Erreur lors de la synchronisation : {}",
+        "err_crit": "❌ Erreur critique de synchronisation : {}",
+        "err_tb": "Impossible d'écrire dans le fichier de traceback : {}"
+    },
+    "EN": {
+        "title": "Google Sheets Auto-Sync",
+        "sync_now": "🔄 Sync Now",
+        "auto_sync": "Automatic Synchronization",
+        "interval": "Interval (minutes):",
+        "enable_auto": "▶ Enable Auto-Sync",
+        "disable_auto": "⏹ Stop Auto-Sync",
+        "status_wait": "Status: Waiting",
+        "status_auto_off": "Status: Auto-Sync Disabled",
+        "status_auto_on": "Status: Auto-Sync Active (every {} min)",
+        "err_num": "Please enter a positive integer.",
+        "welcome": "Welcome to Null Tracker Sync!\nThe tool is connected to your Google Sheet and ready.\n",
+        "auto_stop_log": "\n⏹️ Automatic Mode stopped.",
+        "auto_start_log": "\n▶️ Automatic Mode enabled. Next sync in {} minute(s).",
+        "sync_start": "\n--- SYNC STARTED ---",
+        "sync_end": "--- SYNC FINISHED ---",
+        "import_box": "▶ Importing Box...",
+        "no_box": "  box_data.txt file not found. Ignored.",
+        "box_success": "  ✔ {} Pokémon successfully imported!",
+        "box_empty": "  No new Pokémon to import.",
+        "update_frags": "▶ Updating Frags...",
+        "no_frags": "  No frag data found.",
+        "frags_success": "  ✔ Frags updated for {} grouped trainer(s)!",
+        "err_sheet": "❌ [Sheet Error] Trainer ID {} ('{}') not found in the Google Sheet.",
+        "err_sync": "❌ Sync error: {}",
+        "err_crit": "❌ Critical sync error: {}",
+        "err_tb": "Cannot write to traceback file: {}"
+    }
+}
 
 # ==========================================
 # LOGIQUE MÉTIER
@@ -53,12 +114,12 @@ def find_best_trainer_row(target_name, col_a):
     return candidates[best_match] + 1
 
 def import_box(sheet):
-    print("▶ Importation de la Box en cours...")
+    print(TXT[CURRENT_LANG]["import_box"])
     try:
         with open(BOX_FILE, 'r', encoding='utf-8') as f:
             raw_data = f.read()
     except FileNotFoundError:
-        print("  Fichier box_data.txt introuvable. Ignoré.")
+        print(TXT[CURRENT_LANG]["no_box"])
         return
 
     pokemon_sheet = sheet.worksheet("Pokémon")
@@ -119,30 +180,26 @@ def import_box(sheet):
 
     if updates:
         pokemon_sheet.batch_update(updates)
-        print(f"  ✔ {len(updates)} Pokémon importés avec succès !")
+        print(TXT[CURRENT_LANG]["box_success"].format(len(updates)))
     else:
-        print("  Aucun nouveau Pokémon à importer.")
+        print(TXT[CURRENT_LANG]["box_empty"])
 
 def log_traceback(message):
-    """Affiche une erreur et l'écrit dans un fichier de log horodaté."""
     print(message)
     try:
         with open("sync_traceback.txt", "a", encoding="utf-8") as f:
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             f.write(f"[{now}] {message}\n")
     except Exception as e:
-        print(f"Impossible d'écrire dans le fichier de traceback : {e}")
+        print(TXT[CURRENT_LANG]["err_tb"].format(e))
 
-# ==========================================
-# FONCTION 2 : UPDATE DES FRAGS
-# ==========================================
 def update_frags(sheet):
-    print("▶ Mise à jour des Frags en cours...")
+    print(TXT[CURRENT_LANG]["update_frags"])
     frags_data = load_json(FRAGS_FILE)
     trainers_map = load_json(TRAINERS_FILE)
 
     if not frags_data or "encounters" not in frags_data:
-        print("  Aucune donnée de frags trouvée.")
+        print(TXT[CURRENT_LANG]["no_frags"])
         return
 
     tracker_sheet = sheet.worksheet("Trainer Tracking")
@@ -154,8 +211,7 @@ def update_frags(sheet):
         t_id = str(encounter["trainerId"])
         trainer_name = trainers_map.get(t_id)
 
-        if not trainer_name:
-            log_traceback(f"❌ [Avertissement] Le dresseur ID {t_id} n'a pas de nom défini dans trainers.json.")
+        if not trainer_name or "!!!" in trainer_name:
             continue
 
         if trainer_name not in aggregated_frags:
@@ -176,7 +232,7 @@ def update_frags(sheet):
 
         if not row_index:
             ids_str = ", ".join(data["ids"])
-            log_traceback(f"❌ [Erreur Sheet] Dresseur ID {ids_str} ('{trainer_name}') est introuvable dans la Google Sheet.")
+            log_traceback(TXT[CURRENT_LANG]["err_sheet"].format(ids_str, trainer_name))
             continue
 
         row_data = []
@@ -195,7 +251,7 @@ def update_frags(sheet):
 
     if updates:
         tracker_sheet.batch_update(updates)
-        print(f"  ✔ Frags mis à jour pour {len(updates)} dresseur(s) regroupé(s) !")
+        print(TXT[CURRENT_LANG]["frags_success"].format(len(updates)))
 
 # ==========================================
 # GESTIONNAIRE D'AFFICHAGE CONSOLE -> GUI
@@ -224,7 +280,7 @@ class TrackerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Null Nuzlocke Auto-Sync")
-        self.root.geometry("600x500")
+        self.root.geometry("620x500")
         self.root.configure(padx=20, pady=20)
 
         self.is_auto_sync_running = False
@@ -233,60 +289,90 @@ class TrackerApp:
         self.setup_ui()
 
         sys.stdout = PrintLogger(self.log_area, self.root)
-
-        print("Bienvenue dans le Null Tracker Sync !")
-        print("L'outil est connecté à ta Google Sheet et prêt.\n")
+        print(TXT[CURRENT_LANG]["welcome"])
 
     def setup_ui(self):
-        title_label = tk.Label(self.root, text="Google Sheets Auto-Sync", font=("Helvetica", 16, "bold"))
-        title_label.pack(pady=(0, 15))
+        top_frame = tk.Frame(self.root)
+        top_frame.pack(fill=tk.X, pady=(0, 15))
+        
+        self.title_label = tk.Label(top_frame, text=TXT[CURRENT_LANG]["title"], font=("Helvetica", 16, "bold"))
+        self.title_label.pack(side=tk.LEFT)
+        
+        lang_frame = tk.Frame(top_frame)
+        lang_frame.pack(side=tk.RIGHT)
+        
+        # Ajout des drapeaux emojis (police Segoe UI Emoji pour compatibilité maximale)
+        tk.Label(lang_frame, text="🇫🇷", font=("Segoe UI Emoji", 14)).pack(side=tk.LEFT)
+        self.lang_scale = tk.Scale(lang_frame, from_=0, to=1, orient=tk.HORIZONTAL, showvalue=0, sliderlength=20, length=40, command=self.change_lang)
+        self.lang_scale.pack(side=tk.LEFT, padx=5)
+        tk.Label(lang_frame, text="🇺🇸", font=("Segoe UI Emoji", 14)).pack(side=tk.LEFT)
 
-        self.btn_manual = tk.Button(self.root, text="🔄 Synchroniser Maintenant", font=("Helvetica", 12), 
+        self.btn_manual = tk.Button(self.root, text=TXT[CURRENT_LANG]["sync_now"], font=("Helvetica", 12), 
                                     bg="#4CAF50", fg="white", activebackground="#45a049", 
                                     command=self.run_sync_thread)
         self.btn_manual.pack(fill=tk.X, pady=5)
 
-        frame_auto = tk.LabelFrame(self.root, text="Synchronisation Automatique", font=("Helvetica", 10), padx=10, pady=10)
-        frame_auto.pack(fill=tk.X, pady=15)
+        self.frame_auto = tk.LabelFrame(self.root, text=TXT[CURRENT_LANG]["auto_sync"], font=("Helvetica", 10), padx=10, pady=10)
+        self.frame_auto.pack(fill=tk.X, pady=15)
 
-        tk.Label(frame_auto, text="Intervalle (minutes) :").pack(side=tk.LEFT)
+        self.lbl_interval = tk.Label(self.frame_auto, text=TXT[CURRENT_LANG]["interval"])
+        self.lbl_interval.pack(side=tk.LEFT)
         
-        self.entry_minutes = tk.Entry(frame_auto, width=5, justify="center")
+        self.entry_minutes = tk.Entry(self.frame_auto, width=5, justify="center")
         self.entry_minutes.insert(0, "5")
         self.entry_minutes.pack(side=tk.LEFT, padx=5)
 
-        self.btn_auto = tk.Button(frame_auto, text="▶ Activer Auto-Sync", bg="#2196F3", fg="white", 
+        self.btn_auto = tk.Button(self.frame_auto, text=TXT[CURRENT_LANG]["enable_auto"], bg="#2196F3", fg="white", 
                                   command=self.toggle_auto_sync)
         self.btn_auto.pack(side=tk.RIGHT)
 
-        self.lbl_status = tk.Label(self.root, text="Statut : En attente", fg="gray", font=("Helvetica", 10, "italic"))
+        self.lbl_status = tk.Label(self.root, text=TXT[CURRENT_LANG]["status_wait"], fg="gray", font=("Helvetica", 10, "italic"))
         self.lbl_status.pack(pady=5)
 
         self.log_area = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, height=12, font=("Consolas", 9), state=tk.DISABLED)
         self.log_area.pack(fill=tk.BOTH, expand=True)
+
+    def change_lang(self, val):
+        global CURRENT_LANG
+        CURRENT_LANG = "EN" if int(val) == 1 else "FR"
+        
+        self.title_label.config(text=TXT[CURRENT_LANG]["title"])
+        self.btn_manual.config(text=TXT[CURRENT_LANG]["sync_now"])
+        self.frame_auto.config(text=TXT[CURRENT_LANG]["auto_sync"])
+        self.lbl_interval.config(text=TXT[CURRENT_LANG]["interval"])
+        
+        if self.is_auto_sync_running:
+            self.btn_auto.config(text=TXT[CURRENT_LANG]["disable_auto"])
+            self.lbl_status.config(text=TXT[CURRENT_LANG]["status_auto_on"].format(self.minutes))
+        else:
+            self.btn_auto.config(text=TXT[CURRENT_LANG]["enable_auto"])
+            if hasattr(self, 'minutes'):
+                self.lbl_status.config(text=TXT[CURRENT_LANG]["status_auto_off"])
+            else:
+                self.lbl_status.config(text=TXT[CURRENT_LANG]["status_wait"])
 
     def toggle_auto_sync(self):
         if self.is_auto_sync_running:
             self.is_auto_sync_running = False
             if self.auto_sync_job:
                 self.root.after_cancel(self.auto_sync_job)
-            self.btn_auto.config(text="▶ Activer Auto-Sync", bg="#2196F3")
-            self.lbl_status.config(text="Statut : Auto-Sync Désactivé", fg="gray")
-            print("\n⏹️ Mode Automatique arrêté.")
+            self.btn_auto.config(text=TXT[CURRENT_LANG]["enable_auto"], bg="#2196F3")
+            self.lbl_status.config(text=TXT[CURRENT_LANG]["status_auto_off"], fg="gray")
+            print(TXT[CURRENT_LANG]["auto_stop_log"])
             self.entry_minutes.config(state=tk.NORMAL)
         else:
             try:
                 self.minutes = int(self.entry_minutes.get())
                 if self.minutes <= 0: raise ValueError
             except ValueError:
-                messagebox.showerror("Erreur", "Veuillez entrer un nombre entier positif.")
+                messagebox.showerror("Erreur / Error", TXT[CURRENT_LANG]["err_num"])
                 return
 
             self.is_auto_sync_running = True
             self.entry_minutes.config(state=tk.DISABLED)
-            self.btn_auto.config(text="⏹ Arrêter Auto-Sync", bg="#f44336")
-            self.lbl_status.config(text=f"Statut : Auto-Sync Actif (toutes les {self.minutes} min)", fg="#2196F3")
-            print(f"\n▶️ Mode Automatique activé. Prochaine synchro dans {self.minutes} minute(s).")
+            self.btn_auto.config(text=TXT[CURRENT_LANG]["disable_auto"], bg="#f44336")
+            self.lbl_status.config(text=TXT[CURRENT_LANG]["status_auto_on"].format(self.minutes), fg="#2196F3")
+            print(TXT[CURRENT_LANG]["auto_start_log"].format(self.minutes))
             
             self.run_sync_thread()
             self.schedule_next_sync()
@@ -304,7 +390,7 @@ class TrackerApp:
         threading.Thread(target=self.perform_sync, daemon=True).start()
 
     def perform_sync(self):
-        print("\n--- DÉBUT DE LA SYNCHRONISATION ---")
+        print(TXT[CURRENT_LANG]["sync_start"])
         try:
             scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
             creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
@@ -315,10 +401,10 @@ class TrackerApp:
             update_frags(sheet)
             
         except Exception as e:
-            print(f"❌ Erreur lors de la synchronisation : {e}")
-            log_traceback(f"❌ Erreur critique de synchronisation : {e}")
+            print(TXT[CURRENT_LANG]["err_sync"].format(e))
+            log_traceback(TXT[CURRENT_LANG]["err_crit"].format(e))
             
-        print("--- FIN DE LA SYNCHRONISATION ---")
+        print(TXT[CURRENT_LANG]["sync_end"])
         self.root.after(0, lambda: self.btn_manual.config(state=tk.NORMAL))
 
 # ==========================================
@@ -326,46 +412,49 @@ class TrackerApp:
 # ==========================================
 if __name__ == "__main__":
     root = tk.Tk()
-    root.withdraw() # Cache la fenêtre pendant les vérifications
+    root.withdraw() 
 
     missing_files = []
 
-    # Vérification 1 : Les identifiants Google
-    if not os.path.exists(CREDENTIALS_FILE):
-        missing_files.append(CREDENTIALS_FILE)
+    if not os.path.exists(CREDENTIALS_FILE): missing_files.append(CREDENTIALS_FILE)
+    if not os.path.exists(TRAINERS_FILE): missing_files.append(TRAINERS_FILE)
 
-    # Vérification 2 : Le dictionnaire des dresseurs
-    if not os.path.exists(TRAINERS_FILE):
-        missing_files.append(TRAINERS_FILE)
-
-    # Vérification 3 : Le fichier contenant le lien (on le crée s'il manque)
     if not os.path.exists(SHEET_URL_FILE):
         with open(SHEET_URL_FILE, "w", encoding="utf-8") as f:
             f.write("COLLE_LE_LIEN_DE_TA_SHEET_ICI")
         missing_files.append(SHEET_URL_FILE)
 
     if missing_files:
-        msg = "Le programme ne peut pas démarrer car certains fichiers obligatoires sont introuvables :\n\n"
+        msg = (
+            "Le programme ne peut pas démarrer car certains fichiers obligatoires sont introuvables :\n"
+            "The program cannot start because some required files are missing:\n\n"
+        )
         for f in missing_files:
             msg += f"- {f}\n"
-        msg += "\nComment les récupérer/configurer :\n"
-        msg += "1. credentials.json : Crée une clé via Google Cloud (voir tutoriel GitHub).\n"
-        msg += "2. sheet_url.txt : Ce fichier vient d'être créé ! Ouvre-le avec le Bloc-notes et colle le lien de ta Google Sheet dedans.\n"
-        msg += "3. trainers.json : Utilise le script fourni pour le générer ou télécharge-le.\n\n"
-        msg += "Place tous ces fichiers dans le même dossier que cet exécutable (.exe) et relance l'application."
-        
-        messagebox.showerror("Fichiers manquants", msg)
+        msg += (
+            "\nComment les récupérer/configurer (How to fix):\n"
+            "1. credentials.json : Crée une clé via Google Cloud / Create a key via Google Cloud.\n"
+            "2. sheet_url.txt : Ouvre-le et colle le lien direct de ta Sheet dedans. / Open it and paste your Google Sheet link inside.\n"
+            "3. trainers.json : Génère-le avec le script fourni. / Generate it with the provided script.\n\n"
+            "Place tous ces fichiers dans le même dossier que l'exécutable et relance.\n"
+            "Place all these files in the same folder as the executable and restart."
+        )
+        messagebox.showerror("Fichiers manquants / Missing files", msg)
         sys.exit()
 
-    # Si tous les fichiers sont là, on lit l'URL
     with open(SHEET_URL_FILE, "r", encoding="utf-8") as f:
         url = f.read().strip()
         if not url.startswith("http"):
-            messagebox.showerror("Lien invalide", f"Le fichier '{SHEET_URL_FILE}' ne contient pas un lien valide.\n\nOuvre ce fichier avec le Bloc-notes, supprime tout, et colle le lien direct vers ta Google Sheet (qui commence par https://...).")
+            msg_url = (
+                f"Le fichier '{SHEET_URL_FILE}' ne contient pas un lien valide.\n"
+                f"The '{SHEET_URL_FILE}' file does not contain a valid link.\n\n"
+                "Ouvre ce fichier avec le Bloc-notes, supprime tout, et colle le lien direct vers ta Google Sheet (qui commence par https://...).\n"
+                "Open this file with Notepad, delete everything, and paste the direct link to your Google Sheet (starting with https://...)."
+            )
+            messagebox.showerror("Lien invalide / Invalid link", msg_url)
             sys.exit()
         SPREADSHEET_URL = url
 
-    # Affichage de l'interface graphique
     root.deiconify() 
     app = TrackerApp(root)
     root.mainloop()
