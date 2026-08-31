@@ -223,4 +223,5 @@ Once the window is open, you have two options:
 # Known Issue
 
 * **Tag Battle Export:** During Tag Battle, the script will read your partner mon as well and wrote the frags they take. It can also import it's pokemon to your box, overrighting some of yours. I suggest if you're using it during it to manually adjust the "Trainer Tracking" tab and reload your script after the fight so that it doesn't try to rewrite it next time you sync + re import your box correctly.
-* **T&L Issue:** There's a bug during t&l fight that lead to you taking to frag that doesn't exist. I'll probably fix it, but now you know about it.
+* **T&L Issue:** There's a bug during t&l fight that lead to you taking to frag that doesn't exist. I've tried to fix it, but it still may be present.
+* **Optionnals** I've tried to remove every optionnal from the mapping, so that it won't replace another fight when you do an optionnal.
