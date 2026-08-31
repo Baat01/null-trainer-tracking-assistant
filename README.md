@@ -1,4 +1,4 @@
-# [Installation Video](https://youtu.be/db_Oq92xHoo) 
+# English Tutorial Below the French Version
 
 # 🇫🇷 Pokémon Null - Nuzlocke Auto-Tracker & Google Sheets Sync
 
@@ -23,6 +23,8 @@ Le système détecte automatiquement les Pokémon de votre équipe, les captures
 ---
 
 ## ⚙️ Installation et Configuration
+
+# [Installation Video (Option B)](https://youtu.be/db_Oq92xHoo) 
 
 ### Étape 1 : Préparer l'environnement (2 Options)
 
