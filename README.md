@@ -18,7 +18,7 @@ Le système détecte automatiquement les Pokémon de votre équipe, les captures
 ## 🛠️ Prérequis
 
 1.  **Émulateur :** [mGBA version 0.10.0](https://mgba.io/) ou supérieure (le scripting Lua n'est pas supporté sur les versions antérieures).
-2.  **Google Sheet :** Une copie de la [Frag Sheet "Advanced Frag Sheet Terra Emerald V1.2.1"](https://docs.google.com/spreadsheets/d/17SsoACBANl5g-iQghpHbQPkRDyR59ujOs0aZHsIaIAU/edit?gid=1682547405#gid=1682547405) (ou un modèle similaire) avec les onglets "Pokémon" et "Trainer Tracking".
+2.  **Google Sheet :** Une copie de la [Frag Sheet "Advanced Frag Sheet Null V1.2.4.1"](https://docs.google.com/spreadsheets/d/17SsoACBANl5g-iQghpHbQPkRDyR59ujOs0aZHsIaIAU/edit?gid=1682547405#gid=1682547405) (ou un modèle similaire) avec les onglets "Pokémon" et "Trainer Tracking".
 
 ---
 
@@ -131,7 +131,7 @@ The system automatically detects your party Pokémon, PC box catches, and most i
 ## 🛠️ Prerequisites
 
 1. **Emulator:** [mGBA version 0.10.0](https://mgba.io/) or higher (Lua scripting is not supported on older versions).
-2. **Google Sheet:** A copy of the "Null" Frag Sheet (or a similar template) containing the "Pokémon" and "Trainer Tracking" tabs.
+2. **Google Sheet :** A copy of the [Frag Sheet "Advanced Frag Sheet Null V1.2.4.1"](https://docs.google.com/spreadsheets/d/17SsoACBANl5g-iQghpHbQPkRDyR59ujOs0aZHsIaIAU/edit?gid=1682547405#gid=1682547405) (or a similar template) containing the "Pokémon" and "Trainer Tracking" tabs.
 
 ---
 
