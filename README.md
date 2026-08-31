@@ -1,4 +1,4 @@
-# English Tutorial Below the French Version
+# English Tutorial & Known Issues Below the French Version
 
 # 🇫🇷 Pokémon Null - Nuzlocke Auto-Tracker & Google Sheets Sync
 
