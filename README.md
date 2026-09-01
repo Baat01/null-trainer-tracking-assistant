@@ -224,6 +224,7 @@ Once the window is open, you have two options:
 
 # Known Issue
 
+* **Not Fully Evolved Issue:** Since the program will use your mon name to put them in the google sheet, their recorded frag won't count when they evolve. To fix this issue, you'll need to ctrl + h => change the previous name of the pokemon (ex:pikachu) by their current name (ex:raichu), **but only on the "Trainer Tracking" tab**.It's mostly relevant for School split, since your mon here are not fully evolved.
 * **Tag Battle Export:** During Tag Battle, the script will read your partner mon as well and wrote the frags they take. It can also import it's pokemon to your box, overrighting some of yours. I suggest if you're using it during it to manually adjust the "Trainer Tracking" tab and reload your script after the fight so that it doesn't try to rewrite it next time you sync + re import your box correctly.
 * **T&L Issue:** There's a bug during t&l fight that lead to you taking to frag that doesn't exist. I've tried to fix it, but it still may be present.
 * **Optionnals:** I've tried to remove every optionnal from the mapping, but I most likely missed some. If you do an optionnal that is registered in the mapping, it will replace another fight data with a similar name.
