@@ -1,5 +1,5 @@
 -- =====================================================================
--- AUTO-TRACKER LUA : AUTO-DÉCHIFFREMENT GBA & ALERTES (V30)
+-- AUTO-TRACKER LUA : SOUS-DOSSIER "frag data" & CHEMINS ABSOLUS (V31)
 -- =====================================================================
 
 local gPlayerPartyCount = 0x0200536D
@@ -30,6 +30,39 @@ local logLines = {}
 local forceRender = false
 local frameCounter = 0
 
+-- =====================================================================
+-- 🛠️ SYSTÈME DE CHEMIN ABSOLU & SOUS-DOSSIER "frag data"
+-- =====================================================================
+local scriptDirectory = ""
+local dataDirectory = ""
+
+local function initScriptDirectory()
+    local source = debug.getinfo(1, "S").source
+    if source:sub(1, 1) == "@" then
+        local fullPath = source:sub(2)
+        local lastSlash = fullPath:match("^.*()[\\/]")
+        if lastSlash then
+            scriptDirectory = fullPath:sub(1, lastSlash)
+        end
+    end
+    
+    local sep = package.config:sub(1, 1) or "/"
+    dataDirectory = scriptDirectory .. "frag data" .. sep
+
+    -- Tentative de création automatique du dossier
+    if sep == "\\" then
+        os.execute('mkdir "' .. scriptDirectory .. 'frag data" 2>nul')
+    else
+        os.execute('mkdir -p "' .. scriptDirectory .. 'frag data" 2>/dev/null')
+    end
+
+    print("Dossier de sortie défini sur : " .. dataDirectory)
+end
+
+initScriptDirectory()
+
+-- =====================================================================
+
 -- 1. Nettoyage des formes
 local function cleanPokemonName(name)
     if not name or name == "" or name == "Inconnu" then return "Inconnu" end
@@ -42,10 +75,8 @@ local function resolveSpeciesId(pMon)
     if not pMon or not pMon.species or pMon.species == 0 then return 0 end
     local sp = pMon.species
     
-    -- Si l'ID est valide dans la table, on le renvoie directement
     if mons and mons[sp] then return sp end
     
-    -- Sinon, tentative de déchiffrement XOR GBA
     if pMon.personality and pMon.otId then
         local key = (pMon.personality ~ pMon.otId) & 0xFFFF
         local decrypted = sp ~ key
@@ -74,7 +105,8 @@ end
 local function dumpDetailedTraceback(reason, extraInfo)
     logToTracker("⚠️ [ANOMALIE] " .. tostring(reason))
     
-    local file = io.open("lua_traceback.txt", "a")
+    local filePath = dataDirectory .. "lua_traceback.txt"
+    local file = io.open(filePath, "a")
     if not file then return end
     
     local ramPartyCount = emu:read8(gPlayerPartyCount)
@@ -124,7 +156,7 @@ local function dumpDetailedTraceback(reason, extraInfo)
     file:close()
 end
 
--- 6. Initialisation Buffers (Debug supprimé)
+-- 6. Initialisation Buffers
 local function ensureBuffers()
     if not trackerBuffer then
         trackerBuffer = console:createBuffer("Frags & Live Tracker")
@@ -167,8 +199,12 @@ end
 
 -- 8. Sauvegarde JSON
 local function saveJSON()
-    local file = io.open("frags_by_trainer.json", "w")
-    if not file then return end
+    local filePath = dataDirectory .. "frags_by_trainer.json"
+    local file = io.open(filePath, "w")
+    if not file then 
+        logToTracker("⚠️ Erreur création frags_by_trainer.json")
+        return 
+    end
     
     local out = '{\n  "encounters": [\n'
     for i, tId in ipairs(trainerHistory) do
@@ -280,10 +316,14 @@ local function getKillerName()
     return "Non attribué"
 end
 
--- 11. Export Box (Délégué à exportFull de Baat Tracking Script)
+-- 11. Export Box dans "frag data/box_data.txt"
 local function exportBoxToTXT()
-    local file = io.open("box_data.txt", "w")
-    if not file then return end
+    local filePath = dataDirectory .. "box_data.txt"
+    local file = io.open(filePath, "w")
+    if not file then 
+        logToTracker("⚠️ Erreur création box_data.txt")
+        return 
+    end
     
     if exportFull then
         local fileBuffer = {
@@ -309,7 +349,6 @@ local function trackCombatDirect()
     local isTrainerBattle = (math.floor(bFlags / 8) % 2 ~= 0)
     local inBattle = (bCount > 0 and outcome == 0 and tId_A ~= 0 and isTrainerBattle)
     
-    -- DÉBUT DE COMBAT
     if inBattle and not wasInBattle then
         wasInBattle = true
         currentTrainerId = tId_A
@@ -317,7 +356,7 @@ local function trackCombatDirect()
         lastTrainerDisplayId = tId_A
         
         exportBoxToTXT()
-        logToTracker("📦 Box exportée avec succès !")
+        logToTracker("Box exportée avec succès !")
         
         local foundIdx = nil
         for i, histId in ipairs(trainerHistory) do
@@ -373,7 +412,6 @@ local function trackCombatDirect()
             lastEnemyHP[i] = (eMon and eMon.hp) or 0
         end
         
-    -- FIN DE COMBAT
     elseif not inBattle and wasInBattle then
         wasInBattle = false
         logToTracker("🏁 Fin du combat. Sauvegarde...")
@@ -383,7 +421,6 @@ local function trackCombatDirect()
         forceRender = true
     end
     
-    -- PENDANT LE COMBAT
     if inBattle and currentTrainerId ~= 0 then
         local isSpecialBugTrainer = (currentTrainerId == 794 or currentTrainerId == 795 or currentTrainerBId == 794 or currentTrainerBId == 795)
 
@@ -392,15 +429,13 @@ local function trackCombatDirect()
             if eMon and eMon.species ~= 0 then
                 local curHp = eMon.hp or 0
                 if lastEnemyHP[i] and lastEnemyHP[i] > 0 and curHp == 0 then
-                    -- Filtre anti-bug sur les dresseurs 794 / 795
                     if isSpecialBugTrainer and eMon.species > 5000 then
-                        -- Espèce buggée ignorée
                     else
                         local enemyName = (mons and mons[eMon.species]) or ("Espèce " .. eMon.species)
                         local killerName = getKillerName()
                         
                         addFrag(killerName)
-                        logToTracker("💀 " .. enemyName .. " mis KO par " .. killerName)
+                        logToTracker("" .. enemyName .. " mis KO par " .. killerName)
                     end
                 end
                 lastEnemyHP[i] = curHp
@@ -424,7 +459,7 @@ local function initDirectTracker()
     partyOrders = {}
     saveJSON() 
     ensureBuffers()
-    logToTracker("✅ Tracker prêt")
+    logToTracker("✅ Tracker prêt (Dossier 'frag data')")
     renderUI(0, 0, 0, 0, false, false)
 end
 
